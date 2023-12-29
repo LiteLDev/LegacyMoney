@@ -56,3 +56,5 @@ _deps
 ## Project specific
 # Output files
 /bin/
+
+.vscode

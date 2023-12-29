@@ -5,6 +5,7 @@
 
 #include <ll/api/plugin/Plugin.h>
 
+extern void entry();
 namespace plugins {
 
 bool Plugin::load(ll::plugin::Plugin& self) {
@@ -27,7 +28,7 @@ bool Plugin::enable(ll::plugin::Plugin& self) {
         throw std::runtime_error("plugin is enabled by a different instance");
     }
 
-    // Code for enabling the plugin goes here.
+    entry();
 
     mIsEnabled = true;
     return true;
