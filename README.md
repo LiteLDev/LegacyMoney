@@ -1,31 +1,36 @@
-# LeviLamina Plugin Template
+# LegacyMoney
 
-A LeviLamina plugin template
+English | [简体中文](README.zh.md)  
+Legacy LiteLoaderMoney for LeviLamina 
 
-This plugin is a template for developing LeviLamina plugins.
+# Installation
 
-## Usage
+## Use Lip
 
-Before using this plugin template, make sure that you have installed XMake and a Minecraft Bedrock Server with LeviLamina.
+```bash
+lip install github.com/tooth-hub/LegacyMoney
+```
 
-1. Generate a new repository from this template.
+# Usage
 
-1. Clone the new repository into a local folder.
+| Command                     | Description                        | Permission |
+|-----------------------------|------------------------------------|------------|
+| /money query [player]       | Query your/other players's balance | Player/OP  |
+| /money pay player amount    | Transfer money to a player         | Player     |
+| /money set player amount    | Set player's balance               | OP         |
+| /money add player amount    | Add player's balance               | OP         |
+| /money reduce player amount | Reduce player's balance            | OP         |
+| /money hist                 | Print your running account         | Player     |
+| /money purge                | Clear your running account         | OP         |
+| /money top                  | Balance ranking                    | Player     |
+| /money_s                    | Command with TargetSelector        | Player     |
 
-1. Change the plugin name and the expected LeviLamina version in `xmake.lua`.
+# Configuration File
 
-1. Add your code.
-
-1. Run `xmake` in the root of the repository.
-
-Now the build is complete at `bin/`.
-
-## Contributing
-
-PRs accepted.
-
-This project follows the [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct/) Code of Conduct.
-
-## License
-
-[CC0-1.0 © LiteLDev](LICENSE)
+```jsonc
+{
+    "language": "en",
+    "def_money": 0, //Default money
+    "pay_tax": 0.0 //Tax
+}
+```
