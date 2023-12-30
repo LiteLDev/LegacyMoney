@@ -99,8 +99,8 @@ class MoneyCommand : public Command {
 
 public:
     void execute(CommandOrigin const& ori, CommandOutput& outp) const {
-        std::string     dstxuid, myuid;
-        ll::PlayerInfo& info = ll::PlayerInfo::getInstance();
+        std::string              dstxuid, myuid;
+        ll::service::PlayerInfo& info = ll::service::PlayerInfo::getInstance();
         switch (op) {
         case query:
         case hist:

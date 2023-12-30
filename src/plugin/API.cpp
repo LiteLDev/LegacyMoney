@@ -209,7 +209,7 @@ std::vector<std::pair<std::string, long long>> LLMoneyRanking(unsigned short num
 }
 
 std::string LLMoneyGetHist(std::string xuid, int timediff) {
-    ll::PlayerInfo& info = ll::PlayerInfo::getInstance();
+    ll::service::PlayerInfo& info = ll::service::PlayerInfo::getInstance();
     try {
         SQLite::Statement get{
             *db,
