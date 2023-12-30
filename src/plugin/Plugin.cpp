@@ -48,9 +48,9 @@ bool Plugin::disable(ll::plugin::Plugin& self) {
     return true;
 }
 
-ll::Logger const& Plugin::getLogger() const { return getSelf().getLogger(); }
+// ll::Logger const& Plugin::getLogger() const { return getSelf().getLogger(); }
 
-std::string_view Plugin::getName() const { return getSelf().getManifest().name; }
+// std::string_view Plugin::getName() const { return getSelf().getManifest().name; }
 
 ll::plugin::Plugin& Plugin::getSelf() const {
     if (mSelf == nullptr) {

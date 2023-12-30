@@ -1,11 +1,23 @@
 #include "LLMoney.h"
 #include "Plugin.h"
 #include "Settings.h"
-#include "ll/api/command/CommandRegistrar.h"
+#include "ll/api/event/EventBus.h"
+#include "ll/api/event/ListenerBase.h"
 #include "ll/api/event/command/SetupCommandEvent.h"
+#include "ll/api/i18n/I18nAPI.h"
+#include "ll/api/service/PlayerInfo.h"
 #include "mc/server/ServerPlayer.h"
+#include "mc/server/commands/CommandBlockName.h"
+#include "mc/server/commands/CommandOrigin.h"
+#include "mc/server/commands/CommandOutput.h"
+#include "mc/server/commands/CommandOutputMessageType.h"
+#include "mc/server/commands/CommandParameterData.h"
+#include "mc/server/commands/CommandRegistry.h"
+#include "mc/server/commands/CommandSelector.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/level/Command.h"
 #include "sqlitecpp/SQLiteCpp.h"
+
 
 ll::Logger logger("LegacyMoney");
 
@@ -74,6 +86,9 @@ bool initDB();
 
 bool cmp(std::pair<std::string, long long> a, std::pair<std::string, long long> b) { return a.second > b.second; }
 
+
+using ll::i18n::tr;
+
 class MoneyCommand : public Command {
     enum MoneyOP : int { query = 1, hist = 2, pay = 3, set = 4, add = 5, reduce = 6, purge = 7, top = 8 } op;
     std::string dst;
@@ -84,18 +99,19 @@ class MoneyCommand : public Command {
 
 public:
     void execute(CommandOrigin const& ori, CommandOutput& outp) const {
-        std::string dstxuid, myuid;
+        std::string     dstxuid, myuid;
+        ll::PlayerInfo& info = ll::PlayerInfo::getInstance();
         switch (op) {
         case query:
         case hist:
             if (dst_isSet && (int)ori.getPermissionsLevel() > 0) {
-                dstxuid = PlayerInfo::getXuid(dst);
+                dstxuid = info.fromName(dst)->xuid;
             } else {
-                if (ori.getOriginType() != (CommandOriginType)OriginType::Player) {
+                if (ori.getOriginType() != CommandOriginType::Player) {
                     outp.error(tr("money.dontuseinconsole"));
                     return;
                 }
-                dstxuid = ori.getPlayer()->getXuid();
+                dstxuid = ((Player*)ori.getEntity())->getXuid();
             }
             if (dstxuid == "") {
                 outp.error(tr("money.no.target"));
@@ -103,21 +119,21 @@ public:
             }
             break;
         case pay:
-            if (ori.getOriginType() != (CommandOriginType)OriginType::Player) {
+            if (ori.getOriginType() != CommandOriginType::Player) {
                 outp.error(tr("money.dontuseinconsole"));
                 return;
             }
         case set:
         case add:
         case reduce:
-            dstxuid = PlayerInfo::getXuid(dst);
+            dstxuid = info.fromName(dst)->xuid;
             if (dstxuid == "") {
                 outp.error(tr("money.no.target"));
                 return;
             }
             break;
         case purge:
-            if (ori.getOriginType() != (CommandOriginType)OriginType::Player) {
+            if (ori.getOriginType() != CommandOriginType::Player) {
                 outp.error(tr("money.dontuseinconsole"));
                 return;
             }
@@ -134,17 +150,17 @@ public:
         }
         switch (op) {
         case query:
-            outp.addMessage("Balance: " + std::to_string(LLMoneyGet(dstxuid)));
+            outp.addMessage("Balance: " + std::to_string(LLMoneyGet(dstxuid)), {}, CommandOutputMessageType::Success);
             break;
         case hist:
-            outp.addMessage(LLMoneyGetHist(dstxuid));
+            outp.addMessage(LLMoneyGetHist(dstxuid), {}, CommandOutputMessageType::Success);
             break;
         case pay: {
             if (moneynum <= 0) {
                 outp.error(tr("money.invalid.arg"));
                 return;
             }
-            myuid = ori.getPlayer()->getXuid();
+            myuid = ((Player*)ori.getEntity())->getXuid();
             if (LLMoneyTrans(myuid, dstxuid, moneynum, "money pay")) {
                 long long fee = (long long)(moneynum * Settings::pay_tax);
                 if (fee) LLMoneyTrans(dstxuid, "", fee, "money pay fee");
@@ -192,16 +208,18 @@ public:
             else LLMoneyClearHist(0);
             break;
         case top:
-            vector<std::pair<std::string, long long>> mapTemp = LLMoneyRanking();
+            std::vector<std::pair<std::string, long long>> mapTemp = LLMoneyRanking();
             sort(mapTemp.begin(), mapTemp.end(), cmp);
             outp.success("===== Ranking =====");
             for (auto it = mapTemp.begin(); it != mapTemp.end(); it++) {
                 outp.addMessage(
-                    (PlayerInfo::fromXuid(it->first).empty() ? "NULL" : PlayerInfo::fromXuid(it->first)) + "  "
-                    + std::to_string(it->second)
+                    (info.fromXuid(it->first)->name.empty() ? "NULL" : info.fromXuid(it->first)->name) + "  "
+                        + std::to_string(it->second),
+                    {},
+                    CommandOutputMessageType::Success
                 );
             }
-            outp.addMessage("===================");
+            outp.addMessage("===================", {}, CommandOutputMessageType::Success);
         }
         return;
     }
@@ -244,19 +262,31 @@ public:
         // registerOverload
         registry->registerOverload<MoneyCommand>(
             "money",
-            makeMandatory<CommandParameterDataType::ENUM>(&MoneyCommand::op, "optional", "MoneyOP1"),
-            makeOptional(&MoneyCommand::dst, "PlayerName", &MoneyCommand::dst_isSet)
+            CommandParameterData::makeMandatory<CommandParameterDataType::Enum>(
+                &MoneyCommand::op,
+                "optional",
+                "MoneyOP1"
+            ),
+            CommandParameterData::makeOptional(&MoneyCommand::dst, "PlayerName", &MoneyCommand::dst_isSet)
         );
         registry->registerOverload<MoneyCommand>(
             "money",
-            makeMandatory<CommandParameterDataType::ENUM>(&MoneyCommand::op, "optional", "MoneyOP2"),
-            makeMandatory(&MoneyCommand::dst, "PlayerName"),
-            makeMandatory(&MoneyCommand::moneynum, "num")
+            CommandParameterData::makeMandatory<CommandParameterDataType::Enum>(
+                &MoneyCommand::op,
+                "optional",
+                "MoneyOP2"
+            ),
+            CommandParameterData::makeMandatory(&MoneyCommand::dst, "PlayerName"),
+            CommandParameterData::makeMandatory(&MoneyCommand::moneynum, "num")
         );
         registry->registerOverload<MoneyCommand>(
             "money",
-            makeMandatory<CommandParameterDataType::ENUM>(&MoneyCommand::op, "optional", "MoneyOP3"),
-            makeOptional(&MoneyCommand::difftime, "time", &MoneyCommand::difftime_isSet)
+            CommandParameterData::makeMandatory<CommandParameterDataType::Enum>(
+                &MoneyCommand::op,
+                "optional",
+                "MoneyOP3"
+            ),
+            CommandParameterData::makeOptional(&MoneyCommand::difftime, "time", &MoneyCommand::difftime_isSet)
         );
     }
 };
@@ -278,9 +308,9 @@ class MoneySCommand : public Command {
 
 public:
     void execute(CommandOrigin const& ori, CommandOutput& outp) const {
-        vector<std::string>   dstxuidlist;
-        optional<std::string> dstxuid;
-        std::string           myuid;
+        std::vector<std::string>   dstxuidlist;
+        std::optional<std::string> dstxuid;
+        std::string                myuid;
         switch (op) {
         case query:
         case hist:
@@ -294,19 +324,19 @@ public:
                     return;
                 }
             } else {
-                if (ori.getOriginType() != (CommandOriginType)OriginType::Player) {
+                if (ori.getOriginType() != CommandOriginType::Player) {
                     outp.error(tr("money.dontuseinconsole"));
                     return;
                 }
-                dstxuid = ori.getPlayer()->getXuid();
+                dstxuid = ((Player*)ori.getEntity())->getXuid();
             }
-            if (dstxuid.val() == "") {
+            if (dstxuid->empty()) {
                 outp.error(tr("money.no.target"));
                 return;
             }
             break;
         case pay: {
-            if (ori.getOriginType() != (CommandOriginType)OriginType::Player) {
+            if (ori.getOriginType() != CommandOriginType::Player) {
                 outp.error(tr("money.dontuseinconsole"));
                 return;
             }
@@ -316,7 +346,7 @@ public:
             }
             for (auto resu : player.results(ori)) {
                 dstxuid = resu->getXuid();
-                if (!dstxuid.Set()) {
+                if (dstxuid->empty()) {
                     outp.error(tr("money.no.target"));
                     return;
                 }
@@ -341,24 +371,28 @@ public:
         }
         switch (op) {
         case query:
-            outp.addMessage("Balance: " + std::to_string(LLMoneyGet(dstxuid.val())));
+            outp.addMessage(
+                "Balance: " + std::to_string(LLMoneyGet(dstxuid.value())),
+                {},
+                CommandOutputMessageType::Success
+            );
             break;
         case hist:
-            outp.addMessage(LLMoneyGetHist(dstxuid.val()));
+            outp.addMessage(LLMoneyGetHist(dstxuid.value()), {}, CommandOutputMessageType::Success);
             break;
         case pay:
             if (moneynum <= 0) {
                 outp.error(tr("money.invalid.arg"));
                 return;
             }
-            myuid = ori.getPlayer()->getXuid();
+            myuid = ((Player*)ori.getEntity())->getXuid();
             if (myuid == "") {
                 outp.error(tr("money.no.target"));
                 return;
             }
-            if (LLMoneyTrans(myuid, dstxuid.val(), moneynum, "money pay")) {
+            if (LLMoneyTrans(myuid, dstxuid.value(), moneynum, "money pay")) {
                 long long fee = (long long)(moneynum * Settings::pay_tax);
-                if (fee) LLMoneyTrans(dstxuid.val(), "", fee, "money pay fee");
+                if (fee) LLMoneyTrans(dstxuid.value(), "", fee, "money pay fee");
                 outp.success(tr("money.pay.succ"));
             } else {
                 outp.error(tr("money.not.enough"));
@@ -453,33 +487,39 @@ public:
         // registerOverload
         registry->registerOverload<MoneySCommand>(
             "money_s",
-            makeMandatory<CommandParameterDataType::ENUM>(&MoneySCommand::op, "optional", "MoneyOP1"),
-            makeOptional(&MoneySCommand::player, "PlayerName", &MoneySCommand::dst_isSet)
+            CommandParameterData::makeMandatory<CommandParameterDataType::Enum>(
+                &MoneySCommand::op,
+                "optional",
+                "MoneyOP1"
+            ),
+            CommandParameterData::makeOptional(&MoneySCommand::player, "PlayerName", &MoneySCommand::dst_isSet)
         );
 
         registry->registerOverload<MoneySCommand>(
             "money_s",
-            makeMandatory<CommandParameterDataType::ENUM>(&MoneySCommand::op, "optional", "MoneyOP2"),
-            makeMandatory(&MoneySCommand::player, "PlayerName"),
-            makeMandatory(&MoneySCommand::moneynum, "num")
+            CommandParameterData::makeMandatory<CommandParameterDataType::Enum>(
+                &MoneySCommand::op,
+                "optional",
+                "MoneyOP2"
+            ),
+            CommandParameterData::makeMandatory(&MoneySCommand::player, "PlayerName"),
+            CommandParameterData::makeMandatory(&MoneySCommand::moneynum, "num")
         );
     }
 };
-#include "lang.h"
 
 void loadCfg() {
     // config
-    if (!std::filesystem::exists("plugins/LLMoney")) std::filesystem::create_directories("plugins/LLMoney");
-    if (std::filesystem::exists("plugins/LLMoney/money.json")) {
+    if (std::filesystem::exists("plugins/LegacyMoney/money.json")) {
         try {
-            Settings::LoadConfigFromJson("plugins/LLMoney/money.json");
+            Settings::LoadConfigFromJson("plugins/LegacyMoney/money.json");
         } catch (std::exception& e) {
             logger.error("Configuration file is Invalid, Error: {}", e.what());
         } catch (...) {
             logger.error("Configuration file is Invalid");
         }
     } else {
-        Settings::WriteDefaultConfig("plugins/LLMoney/money.json");
+        Settings::WriteDefaultConfig("plugins/LegacyMoney/money.json");
     }
 }
 
@@ -489,12 +529,11 @@ void entry() {
     if (!initDB()) {
         return;
     }
-    Event::RegCmdEvent::subscribe([](const Event::RegCmdEvent& ev) {
-        MoneyCommand::setup(ev.mCommandRegistry);
-        MoneySCommand::setup(ev.mCommandRegistry);
-        return true;
+    ll::event::EventBus::getInstance().emplaceListener<ll::event::SetupCommandEvent>([](ll::event::SetupCommandEvent& ev
+                                                                                     ) {
+        MoneyCommand::setup(&ev.registry());
+        MoneySCommand::setup(&ev.registry());
     });
-    Translation::load("plugins\\LLMoney\\language.json", Settings::language, defaultLangData);
-    logger.info("Loaded version: {}", LLMONEY_VERSION.toString());
-    RemoteCallInit();
+    ll::i18n::load("plugins/LegacyMoney/" + Settings::language + ".json");
+    // RemoteCallInit();
 }
