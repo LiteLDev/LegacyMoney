@@ -221,16 +221,18 @@ std::string LLMoneyGetHist(std::string xuid, int timediff) {
         get.bindNoCopy(2, xuid);
         get.bindNoCopy(3, xuid);
         while (get.executeStep()) {
-            std::optional<std::string> from, to;
-            from = info.fromXuid(get.getColumn(0).getString())->name;
-            to   = info.fromXuid(get.getColumn(1).getString())->name;
-            if (from->empty()) {
+            std::string from, to;
+            auto        fromPl = info.fromXuid(get.getColumn(0).getString());
+            auto        toPl   = info.fromXuid(get.getColumn(1).getString());
+            if (fromPl) from = fromPl->name;
+            if (toPl) to = toPl->name;
+            if (from.empty()) {
                 from = "System";
-            } else if (to->empty()) {
+            } else if (to.empty()) {
                 to = "System";
             }
-            rv += from.value() + " -> " + to.value() + " " + std::to_string((long long)get.getColumn(2).getInt64())
-                + " " + get.getColumn(3).getText() + " (" + get.getColumn(4).getText() + ")\n";
+            rv += from + " -> " + to + " " + std::to_string((long long)get.getColumn(2).getInt64()) + " "
+                + get.getColumn(3).getText() + " (" + get.getColumn(4).getText() + ")\n";
         }
         get.reset();
         get.clearBindings();

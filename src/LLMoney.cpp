@@ -8,12 +8,14 @@
 #include "ll/api/i18n/I18nAPI.h"
 #include "ll/api/plugin/NativePlugin.h"
 #include "ll/api/service/PlayerInfo.h"
+#include "mc/common/wrapper/optional_ref.h"
 #include "mc/server/ServerPlayer.h"
 #include "mc/server/commands/CommandBlockName.h"
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOutput.h"
 #include "mc/server/commands/CommandOutputMessageType.h"
 #include "mc/server/commands/CommandParameterData.h"
+#include "mc/server/commands/CommandPermissionLevel.h"
 #include "mc/server/commands/CommandRegistry.h"
 #include "mc/server/commands/CommandSelector.h"
 #include "mc/world/actor/player/Player.h"
@@ -106,9 +108,9 @@ public:
         switch (op) {
         case query:
         case hist:
-            if (dst_isSet && (int)ori.getPermissionsLevel() > 0) {
+            if (dst_isSet && ori.getPermissionsLevel() > CommandPermissionLevel::Any) {
                 auto playerInfo = info.fromName(dst);
-                if (playerInfo && !playerInfo->xuid.empty()) {
+                if (playerInfo) {
                     dstxuid = playerInfo->xuid;
                 }
             } else {
@@ -130,18 +132,23 @@ public:
             }
         case set:
         case add:
-        case reduce:
-            if (!info.fromName(dst)) {
+        case reduce: {
+            auto playerInfo = info.fromName(dst);
+            if (playerInfo) {
+                dstxuid = playerInfo->xuid;
+            }
+            if (dstxuid.empty()) {
                 outp.error(tr("money.no.target"));
                 return;
             }
             break;
+        }
         case purge:
             if (ori.getOriginType() != CommandOriginType::Player) {
                 outp.error(tr("money.dontuseinconsole"));
                 return;
             }
-            if ((int)ori.getPermissionsLevel() < 1) {
+            if (ori.getPermissionsLevel() < CommandPermissionLevel::GameDirectors) {
                 outp.error(tr("money.no.perm"));
                 return;
             }
@@ -218,7 +225,7 @@ public:
             for (auto it = mapTemp.begin(); it != mapTemp.end(); it++) {
                 auto playerInfo = info.fromXuid(it->first);
                 outp.addMessage(
-                    (playerInfo ? "NULL" : playerInfo->name) + "  " + std::to_string(it->second),
+                    (playerInfo ? playerInfo->name : "NULL") + "  " + std::to_string(it->second),
                     {},
                     CommandOutputMessageType::Success
                 );
@@ -319,7 +326,7 @@ public:
         case query:
         case hist:
             if (dst_isSet) {
-                if ((int)ori.getPermissionsLevel() > 0) {
+                if (ori.getPermissionsLevel() > CommandPermissionLevel::Any) {
                     if (!player.results(ori).empty()) {
                         dstxuid = player.results(ori).begin().operator*()->getXuid();
                     }
@@ -339,7 +346,7 @@ public:
                 return;
             }
             break;
-        case pay: {
+        case pay:
             if (ori.getOriginType() != CommandOriginType::Player) {
                 outp.error(tr("money.dontuseinconsole"));
                 return;
@@ -356,7 +363,6 @@ public:
                 }
             }
             break;
-        }
         case set:
         case add:
         case reduce:
