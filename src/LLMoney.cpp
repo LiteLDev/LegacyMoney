@@ -31,10 +31,11 @@ ll::Logger* logger;
     }
 
 namespace Settings {
-std::string language       = "en";
-int         def_money      = 0;
-float       pay_tax        = 0.0;
-bool        enable_ranking = true;
+std::string language        = "en";
+int         def_money       = 0;
+float       pay_tax         = 0.0;
+bool        enable_ranking  = true;
+bool        enable_commands = true;
 
 nlohmann::json globaljson() {
     nlohmann::json json;
@@ -550,11 +551,14 @@ void entry(ll::plugin::NativePlugin& pl) {
     if (!initDB()) {
         return;
     }
-    ll::event::EventBus::getInstance().emplaceListener<ll::event::SetupCommandEvent>([](ll::event::SetupCommandEvent& ev
-                                                                                     ) {
-        MoneyCommand::setup(&ev.registry());
-        MoneySCommand::setup(&ev.registry());
-    });
+    if (Settings::enable_commands) {
+        ll::event::EventBus::getInstance().emplaceListener<ll::event::SetupCommandEvent>(
+            [](ll::event::SetupCommandEvent& ev) {
+                MoneyCommand::setup(&ev.registry());
+                MoneySCommand::setup(&ev.registry());
+            }
+        );
+    }
     ll::i18n::getInstance() = std::make_unique<ll::i18n::SingleFileI18N>(
         ll::i18n::SingleFileI18N("plugins/LegacyMoney/language.json", Settings::language, defaultLangData)
     );
