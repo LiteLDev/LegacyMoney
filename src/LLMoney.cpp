@@ -172,6 +172,10 @@ public:
                 return;
             }
             myuid = ((Player*)ori.getEntity())->getXuid();
+            if (myuid == dstxuid) {
+                outp.error(tr("money.payyourself"));
+                return;
+            }
             if (LLMoneyTrans(myuid, dstxuid, moneynum, "money pay")) {
                 long long fee = (long long)(moneynum * Settings::pay_tax);
                 if (fee) LLMoneyTrans(dstxuid, "", fee, "money pay fee");
@@ -400,6 +404,10 @@ public:
                 outp.error(tr("money.no.target"));
                 return;
             }
+            if (myuid == dstxuid.value()) {
+                outp.error(tr("money.payyourself"));
+                return;
+            }
             if (LLMoneyTrans(myuid, dstxuid.value(), moneynum, "money pay")) {
                 long long fee = (long long)(moneynum * Settings::pay_tax);
                 if (fee) LLMoneyTrans(dstxuid.value(), "", fee, "money pay fee");
@@ -533,6 +541,8 @@ void loadCfg() {
     }
 }
 
+#include "DefaultLangData.h"
+
 // void RemoteCallInit();
 void entry(ll::plugin::NativePlugin& pl) {
     logger = &pl.getLogger();
@@ -545,6 +555,6 @@ void entry(ll::plugin::NativePlugin& pl) {
         MoneyCommand::setup(&ev.registry());
         MoneySCommand::setup(&ev.registry());
     });
-    ll::i18n::load("plugins/LegacyMoney/" + Settings::language + ".json");
+    ll::i18n::SingleFileI18N("plugins/LegacyMoney/language.json", "en", defaultLangData);
     // RemoteCallInit();
 }
