@@ -107,7 +107,10 @@ public:
         case query:
         case hist:
             if (dst_isSet && (int)ori.getPermissionsLevel() > 0) {
-                dstxuid = info.fromName(dst)->xuid;
+                auto playerInfo = info.fromName(dst);
+                if (playerInfo && !playerInfo->xuid.empty()) {
+                    dstxuid = playerInfo->xuid;
+                }
             } else {
                 if (ori.getOriginType() != CommandOriginType::Player) {
                     outp.error(tr("money.dontuseinconsole"));
@@ -115,7 +118,7 @@ public:
                 }
                 dstxuid = ((Player*)ori.getEntity())->getXuid();
             }
-            if (dstxuid == "") {
+            if (dstxuid.empty()) {
                 outp.error(tr("money.no.target"));
                 return;
             }
@@ -128,8 +131,7 @@ public:
         case set:
         case add:
         case reduce:
-            dstxuid = info.fromName(dst)->xuid;
-            if (dstxuid == "") {
+            if (!info.fromName(dst)) {
                 outp.error(tr("money.no.target"));
                 return;
             }
@@ -214,9 +216,9 @@ public:
             sort(mapTemp.begin(), mapTemp.end(), cmp);
             outp.success("===== Ranking =====");
             for (auto it = mapTemp.begin(); it != mapTemp.end(); it++) {
+                auto playerInfo = info.fromXuid(it->first);
                 outp.addMessage(
-                    (info.fromXuid(it->first)->name.empty() ? "NULL" : info.fromXuid(it->first)->name) + "  "
-                        + std::to_string(it->second),
+                    (playerInfo ? "NULL" : playerInfo->name) + "  " + std::to_string(it->second),
                     {},
                     CommandOutputMessageType::Success
                 );
@@ -388,7 +390,7 @@ public:
                 return;
             }
             myuid = ((Player*)ori.getEntity())->getXuid();
-            if (myuid == "") {
+            if (myuid.empty()) {
                 outp.error(tr("money.no.target"));
                 return;
             }
