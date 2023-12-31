@@ -1,10 +1,12 @@
 #include "LLMoney.h"
 #include "Plugin.h"
 #include "Settings.h"
+#include "ll/api/Logger.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/ListenerBase.h"
 #include "ll/api/event/command/SetupCommandEvent.h"
 #include "ll/api/i18n/I18nAPI.h"
+#include "ll/api/plugin/NativePlugin.h"
 #include "ll/api/service/PlayerInfo.h"
 #include "mc/server/ServerPlayer.h"
 #include "mc/server/commands/CommandBlockName.h"
@@ -18,8 +20,7 @@
 #include "mc/world/level/Command.h"
 #include "sqlitecpp/SQLiteCpp.h"
 
-
-ll::Logger logger("LegacyMoney");
+ll::Logger* logger;
 
 #define JSON1(key, val)                                                                                                \
     if (json.find(key) != json.end()) {                                                                                \
@@ -49,9 +50,10 @@ void initjson(nlohmann::json json) {
     JSON1("enable_ranking", enable_ranking);
 }
 void WriteDefaultConfig(const std::string& fileName) {
+
     std::ofstream file(fileName);
     if (!file.is_open()) {
-        logger.error("Can't open file {}", fileName);
+        logger->error("Can't open file {}", fileName);
         return;
     }
     auto json = globaljson();
@@ -62,7 +64,7 @@ void WriteDefaultConfig(const std::string& fileName) {
 void LoadConfigFromJson(const std::string& fileName) {
     std::ifstream file(fileName);
     if (!file.is_open()) {
-        logger.error("Can't open file {}", fileName);
+        logger->error("Can't open file {}", fileName);
         return;
     }
     nlohmann::json json;
@@ -76,7 +78,7 @@ void reloadJson(const std::string& fileName) {
     if (file) {
         file << globaljson().dump(4);
     } else {
-        logger.error("Configuration File Creation failed!");
+        logger->error("Configuration File Creation failed!");
     }
     file.close();
 }
@@ -514,9 +516,9 @@ void loadCfg() {
         try {
             Settings::LoadConfigFromJson("plugins/LegacyMoney/money.json");
         } catch (std::exception& e) {
-            logger.error("Configuration file is Invalid, Error: {}", e.what());
+            logger->error("Configuration file is Invalid, Error: {}", e.what());
         } catch (...) {
-            logger.error("Configuration file is Invalid");
+            logger->error("Configuration file is Invalid");
         }
     } else {
         Settings::WriteDefaultConfig("plugins/LegacyMoney/money.json");
@@ -524,7 +526,8 @@ void loadCfg() {
 }
 
 // void RemoteCallInit();
-void entry() {
+void entry(ll::plugin::NativePlugin& pl) {
+    logger = &pl.getLogger();
     loadCfg();
     if (!initDB()) {
         return;
