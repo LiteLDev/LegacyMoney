@@ -35,7 +35,8 @@ target("LegacyMoney") -- Change this to your plugin name.
         "UNICODE",
         "WIN32_LEAN_AND_MEAN",
         "ENTT_PACKED_PAGE=128",
-        "_HAS_CXX23=1"
+        "_HAS_CXX23=1",
+        "LLMONEY_EXPORTS"
     )
     add_files(
         "src/**.cpp"
