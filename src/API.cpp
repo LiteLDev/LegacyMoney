@@ -28,7 +28,7 @@ void ConvertData();
 bool initDB() {
     try {
         db = std::make_unique<SQLite::Database>(
-            "plugins\\LLMoney\\economy.db",
+            "plugins/LegacyMoney/economy.db",
             SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE
         );
         db->exec("PRAGMA journal_mode = MEMORY");
