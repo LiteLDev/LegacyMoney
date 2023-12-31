@@ -555,6 +555,8 @@ void entry(ll::plugin::NativePlugin& pl) {
         MoneyCommand::setup(&ev.registry());
         MoneySCommand::setup(&ev.registry());
     });
-    ll::i18n::SingleFileI18N("plugins/LegacyMoney/language.json", "en", defaultLangData);
+    ll::i18n::getInstance() = std::make_unique<ll::i18n::SingleFileI18N>(
+        ll::i18n::SingleFileI18N("plugins/LegacyMoney/language.json", Settings::language, defaultLangData)
+    );
     // RemoteCallInit();
 }
