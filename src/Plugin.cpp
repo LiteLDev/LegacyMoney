@@ -7,7 +7,7 @@ namespace legacymoney {
 
 Plugin::Plugin(ll::plugin::NativePlugin& self) : mSelf(self) {
     entry(mSelf);
-    mSelf.getLogger().info("Loaded! Version: 0.1.0");
+    mSelf.getLogger().info("Loaded! Version: 0.1.1");
 }
 
 bool Plugin::enable() { return true; }

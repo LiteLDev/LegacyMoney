@@ -4,9 +4,9 @@
 #include "ll/api/Logger.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/ListenerBase.h"
-#include "ll/api/event/command/SetupCommandEvent.h"
 #include "ll/api/i18n/I18nAPI.h"
 #include "ll/api/plugin/NativePlugin.h"
+#include "ll/api/service/Bedrock.h"
 #include "ll/api/service/PlayerInfo.h"
 #include "mc/common/wrapper/optional_ref.h"
 #include "mc/server/ServerPlayer.h"
@@ -21,6 +21,7 @@
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/Command.h"
 #include "sqlitecpp/SQLiteCpp.h"
+
 
 ll::Logger* logger;
 
@@ -92,7 +93,7 @@ bool initDB();
 bool cmp(std::pair<std::string, long long> a, std::pair<std::string, long long> b) { return a.second > b.second; }
 
 
-using ll::i18n::tr;
+using ll::i18n::detail::tr;
 
 class MoneyCommand : public Command {
     enum MoneyOP : int { query = 1, hist = 2, pay = 3, set = 4, add = 5, reduce = 6, purge = 7, top = 8 } op;
@@ -552,12 +553,9 @@ void entry(ll::plugin::NativePlugin& pl) {
         return;
     }
     if (Settings::enable_commands) {
-        ll::event::EventBus::getInstance().emplaceListener<ll::event::SetupCommandEvent>(
-            [](ll::event::SetupCommandEvent& ev) {
-                MoneyCommand::setup(&ev.registry());
-                MoneySCommand::setup(&ev.registry());
-            }
-        );
+        CommandRegistry& reg = ll::service::getCommandRegistry().get();
+        MoneyCommand::setup(&reg);
+        MoneySCommand::setup(&reg);
     }
     ll::i18n::getInstance() = std::make_unique<ll::i18n::SingleFileI18N>(
         ll::i18n::SingleFileI18N("plugins/LegacyMoney/language.json", Settings::language, defaultLangData)
