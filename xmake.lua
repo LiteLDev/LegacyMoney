@@ -1,5 +1,5 @@
 add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
-add_requires("levilamina") -- Change this to your expected version.
+add_requires("levilamina")
 
 add_requires("sqlitecpp 3.2.1")
 add_requires("openssl 1.1.1-t")
@@ -8,7 +8,7 @@ if not has_config("vs_runtime") then
     set_runtimes("MD")
 end
 
-target("LegacyMoney") -- Change this to your plugin name.
+target("LegacyMoney")
     add_cxflags(
         "/utf-8",
         "/permissive-",

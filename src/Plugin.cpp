@@ -548,7 +548,7 @@ namespace legacymoney {
 
 Plugin::Plugin(ll::plugin::NativePlugin& self) : mSelf(self) {
     logger = &mSelf.getLogger();
-    mSelf.getLogger().info("Loaded! Version: 0.1.2");
+    mSelf.getLogger().info("Loaded! Version: 0.1.3");
     loadCfg();
     if (!initDB()) {
         return;
