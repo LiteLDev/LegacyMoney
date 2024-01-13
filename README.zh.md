@@ -8,7 +8,7 @@ LeviLamina的经典版LiteLoaderMoney
 ## 使用Lip
 
 ```bash
-lip install github.com/tooth-hub/LegacyMoney
+lip install github.com/LiteLDev/LegacyMoney
 ```
 # 用法
 

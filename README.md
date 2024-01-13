@@ -8,7 +8,7 @@ Legacy LiteLoaderMoney for LeviLamina
 ## Use Lip
 
 ```bash
-lip install github.com/tooth-hub/LegacyMoney
+lip install github.com/LiteLDev/LegacyMoney
 ```
 
 # Usage
