@@ -59,7 +59,7 @@ bool initDB() {
     return true;
 }
 
-long long LLMoneyGet(std::string xuid) {
+long long LLMoney_Get(std::string xuid) {
     try {
         SQLite::Statement get{*db, "select Money from money where XUID=?"};
         get.bindNoCopy(1, xuid);
@@ -88,7 +88,7 @@ long long LLMoneyGet(std::string xuid) {
 
 bool isRealTrans = true;
 
-bool LLMoneyTrans(std::string from, std::string to, long long val, std::string const& note) {
+bool LLMoney_Trans(std::string from, std::string to, long long val, std::string const& note) {
     bool isRealTrans = ::isRealTrans;
     ::isRealTrans    = true;
     if (isRealTrans)
@@ -99,7 +99,7 @@ bool LLMoneyTrans(std::string from, std::string to, long long val, std::string c
         db->exec("begin");
         SQLite::Statement set{*db, "update money set Money=? where XUID=?"};
         if (from != "") {
-            auto fmoney = LLMoneyGet(from);
+            auto fmoney = LLMoney_Get(from);
             if (fmoney < val) {
                 db->exec("rollback");
                 return false;
@@ -115,7 +115,7 @@ bool LLMoneyTrans(std::string from, std::string to, long long val, std::string c
             }
         }
         if (to != "") {
-            auto tmoney  = LLMoneyGet(to);
+            auto tmoney  = LLMoney_Get(to);
             tmoney      += val;
             if (tmoney < 0) {
                 db->exec("rollback");
@@ -150,27 +150,27 @@ bool LLMoneyTrans(std::string from, std::string to, long long val, std::string c
     }
 }
 
-bool LLMoneyAdd(std::string xuid, long long money) {
+bool LLMoney_Add(std::string xuid, long long money) {
     if (!CallBeforeEvent(LLMoneyEvent::Add, "", xuid, money)) return false;
 
     isRealTrans = false;
-    bool res    = LLMoneyTrans("", xuid, money, "add " + std::to_string(money));
+    bool res    = LLMoney_Trans("", xuid, money, "add " + std::to_string(money));
     if (res) CallAfterEvent(LLMoneyEvent::Add, "", xuid, money);
     return res;
 }
 
-bool LLMoneyReduce(std::string xuid, long long money) {
+bool LLMoney_Reduce(std::string xuid, long long money) {
     if (!CallBeforeEvent(LLMoneyEvent::Reduce, "", xuid, money)) return false;
 
     isRealTrans = false;
-    bool res    = LLMoneyTrans(xuid, "", money, "reduce " + std::to_string(money));
+    bool res    = LLMoney_Trans(xuid, "", money, "reduce " + std::to_string(money));
     if (res) CallAfterEvent(LLMoneyEvent::Reduce, "", xuid, money);
     return res;
 }
 
-bool LLMoneySet(std::string xuid, long long money) {
+bool LLMoney_Set(std::string xuid, long long money) {
     if (!CallBeforeEvent(LLMoneyEvent::Set, "", xuid, money)) return false;
-    long long   now = LLMoneyGet(xuid), diff;
+    long long   now = LLMoney_Get(xuid), diff;
     std::string from, to;
     if (money >= now) {
         from = "";
@@ -183,12 +183,12 @@ bool LLMoneySet(std::string xuid, long long money) {
     }
 
     isRealTrans = false;
-    bool res    = LLMoneyTrans(from, to, diff, "set to " + std::to_string(money));
+    bool res    = LLMoney_Trans(from, to, diff, "set to " + std::to_string(money));
     if (res) CallAfterEvent(LLMoneyEvent::Reduce, "", xuid, money);
     return res;
 }
 
-std::vector<std::pair<std::string, long long>> LLMoneyRanking(unsigned short num) {
+std::vector<std::pair<std::string, long long>> LLMoney_Ranking(unsigned short num) {
     try {
         SQLite::Statement                              get{*db, "select * from money ORDER BY money DESC LIMIT ?"};
         std::vector<std::pair<std::string, long long>> mapTemp;
@@ -208,7 +208,7 @@ std::vector<std::pair<std::string, long long>> LLMoneyRanking(unsigned short num
     }
 }
 
-std::string LLMoneyGetHist(std::string xuid, int timediff) {
+std::string LLMoney_GetHist(std::string xuid, int timediff) {
     ll::service::PlayerInfo& info = ll::service::PlayerInfo::getInstance();
     try {
         SQLite::Statement get{
@@ -243,7 +243,7 @@ std::string LLMoneyGetHist(std::string xuid, int timediff) {
     }
 }
 
-void LLMoneyClearHist(int difftime) {
+void LLMoney_ClearHist(int difftime) {
     try {
         db->exec("DELETE FROM mtrans WHERE strftime('%s','now')-time>" + std::to_string(difftime));
     } catch (std::exception&) {}

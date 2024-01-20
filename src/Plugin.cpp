@@ -164,10 +164,10 @@ public:
         }
         switch (op) {
         case query:
-            outp.addMessage("Balance: " + std::to_string(LLMoneyGet(dstxuid)), {}, CommandOutputMessageType::Success);
+            outp.addMessage("Balance: " + std::to_string(LLMoney_Get(dstxuid)), {}, CommandOutputMessageType::Success);
             break;
         case hist:
-            outp.addMessage(LLMoneyGetHist(dstxuid), {}, CommandOutputMessageType::Success);
+            outp.addMessage(LLMoney_GetHist(dstxuid), {}, CommandOutputMessageType::Success);
             break;
         case pay: {
             if (moneynum <= 0) {
@@ -179,9 +179,9 @@ public:
                 outp.error(tr("money.payyourself"));
                 return;
             }
-            if (LLMoneyTrans(myuid, dstxuid, moneynum, "money pay")) {
+            if (LLMoney_Trans(myuid, dstxuid, moneynum, "money pay")) {
                 long long fee = (long long)(moneynum * Settings::pay_tax);
-                if (fee) LLMoneyTrans(dstxuid, "", fee, "money pay fee");
+                if (fee) LLMoney_Trans(dstxuid, "", fee, "money pay fee");
                 outp.success(tr("money.pay.succ"));
             } else {
                 outp.error(tr("money.not.enough"));
@@ -193,7 +193,7 @@ public:
                 outp.error(tr("money.no.perm"));
                 return;
             }
-            if (LLMoneySet(dstxuid, moneynum)) {
+            if (LLMoney_Set(dstxuid, moneynum)) {
                 outp.success(tr("money.set.succ"));
             } else {
                 outp.error(tr("money.invalid.arg"));
@@ -204,7 +204,7 @@ public:
                 outp.error(tr("money.no.perm"));
                 return;
             }
-            if (LLMoneyAdd(dstxuid, moneynum)) {
+            if (LLMoney_Add(dstxuid, moneynum)) {
                 outp.success(tr("money.add.succ"));
             } else {
                 outp.error(tr("money.invalid.arg"));
@@ -215,18 +215,18 @@ public:
                 outp.error(tr("money.no.perm"));
                 return;
             }
-            if (LLMoneyReduce(dstxuid, moneynum)) {
+            if (LLMoney_Reduce(dstxuid, moneynum)) {
                 outp.success(tr("money.reduce.succ"));
             } else {
                 outp.error(tr("money.invalid.arg"));
             }
             break;
         case purge:
-            if (difftime_isSet) LLMoneyClearHist(difftime);
-            else LLMoneyClearHist(0);
+            if (difftime_isSet) LLMoney_ClearHist(difftime);
+            else LLMoney_ClearHist(0);
             break;
         case top:
-            std::vector<std::pair<std::string, long long>> mapTemp = LLMoneyRanking();
+            std::vector<std::pair<std::string, long long>> mapTemp = LLMoney_Ranking();
             sort(mapTemp.begin(), mapTemp.end(), cmp);
             outp.success("===== Ranking =====");
             for (auto it = mapTemp.begin(); it != mapTemp.end(); it++) {
@@ -389,13 +389,13 @@ public:
         switch (op) {
         case query:
             outp.addMessage(
-                "Balance: " + std::to_string(LLMoneyGet(dstxuid.value())),
+                "Balance: " + std::to_string(LLMoney_Get(dstxuid.value())),
                 {},
                 CommandOutputMessageType::Success
             );
             break;
         case hist:
-            outp.addMessage(LLMoneyGetHist(dstxuid.value()), {}, CommandOutputMessageType::Success);
+            outp.addMessage(LLMoney_GetHist(dstxuid.value()), {}, CommandOutputMessageType::Success);
             break;
         case pay:
             if (moneynum <= 0) {
@@ -411,9 +411,9 @@ public:
                 outp.error(tr("money.payyourself"));
                 return;
             }
-            if (LLMoneyTrans(myuid, dstxuid.value(), moneynum, "money pay")) {
+            if (LLMoney_Trans(myuid, dstxuid.value(), moneynum, "money pay")) {
                 long long fee = (long long)(moneynum * Settings::pay_tax);
-                if (fee) LLMoneyTrans(dstxuid.value(), "", fee, "money pay fee");
+                if (fee) LLMoney_Trans(dstxuid.value(), "", fee, "money pay fee");
                 outp.success(tr("money.pay.succ"));
             } else {
                 outp.error(tr("money.not.enough"));
@@ -426,7 +426,7 @@ public:
             }
             bool su = 0;
             for (auto i : dstxuidlist) {
-                if (LLMoneySet(i, moneynum)) {
+                if (LLMoney_Set(i, moneynum)) {
                     su = 1;
                 }
             }
@@ -444,7 +444,7 @@ public:
             }
             bool su = 0;
             for (auto i : dstxuidlist) {
-                if (LLMoneyAdd(i, moneynum)) {
+                if (LLMoney_Add(i, moneynum)) {
                     su = 1;
                 }
             }
@@ -462,7 +462,7 @@ public:
             }
             bool su = 0;
             for (auto i : dstxuidlist) {
-                if (LLMoneyReduce(i, moneynum)) {
+                if (LLMoney_Reduce(i, moneynum)) {
                     su = 1;
                 }
             }
@@ -548,7 +548,7 @@ namespace legacymoney {
 
 Plugin::Plugin(ll::plugin::NativePlugin& self) : mSelf(self) {
     logger = &mSelf.getLogger();
-    mSelf.getLogger().info("Loaded! Version: 0.1.3");
+    mSelf.getLogger().info("Loaded!");
     loadCfg();
     if (!initDB()) {
         return;

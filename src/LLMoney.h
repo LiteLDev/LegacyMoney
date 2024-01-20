@@ -17,29 +17,18 @@ typedef bool (*LLMoneyCallback)(LLMoneyEvent type, std::string from, std::string
 #ifdef __cplusplus
 extern "C" {
 #endif
-LLMONEY_API long long LLMoneyGet(std::string xuid);
-LLMONEY_API bool      LLMoneySet(std::string xuid, long long money);
-LLMONEY_API bool      LLMoneyTrans(std::string from, std::string to, long long val, std::string const& note = "");
-LLMONEY_API bool      LLMoneyAdd(std::string xuid, long long money);
-LLMONEY_API bool      LLMoneyReduce(std::string xuid, long long money);
+LLMONEY_API long long LLMoney_Get(std::string xuid);
+LLMONEY_API bool      LLMoney_Set(std::string xuid, long long money);
+LLMONEY_API bool      LLMoney_Trans(std::string from, std::string to, long long val, std::string const& note = "");
+LLMONEY_API bool      LLMoney_Add(std::string xuid, long long money);
+LLMONEY_API bool      LLMoney_Reduce(std::string xuid, long long money);
 
-LLMONEY_API std::string LLMoneyGetHist(std::string xuid, int timediff = 24 * 60 * 60);
-LLMONEY_API void        LLMoneyClearHist(int difftime = 0);
+LLMONEY_API std::string LLMoney_GetHist(std::string xuid, int timediff = 24 * 60 * 60);
+LLMONEY_API void        LLMoney_ClearHist(int difftime = 0);
 
-LLMONEY_API void LLMoneyListenBeforeEvent(LLMoneyCallback callback);
-LLMONEY_API void LLMoneyListenAfterEvent(LLMoneyCallback callback);
+LLMONEY_API void LLMoney_ListenBeforeEvent(LLMoneyCallback callback);
+LLMONEY_API void LLMoney_ListenAfterEvent(LLMoneyCallback callback);
 #ifdef __cplusplus
 }
 #endif
-LLMONEY_API std::vector<std::pair<std::string, long long>> LLMoneyRanking(unsigned short num = 5);
-// Old interface
-// Just for compatibility
-// Do not use
-namespace Money {
-LLMONEY_API long long getMoney(std::string xuid);
-LLMONEY_API std::string getTransHist(std::string xuid, int timediff = 24 * 60 * 60);
-LLMONEY_API bool        createTrans(std::string from, std::string to, long long val, std::string const& note = "");
-LLMONEY_API bool        setMoney(std::string xuid, long long money);
-LLMONEY_API bool        reduceMoney(std::string xuid, long long money);
-LLMONEY_API void        purgeHist(int difftime = 0);
-} // namespace Money
+LLMONEY_API std::vector<std::pair<std::string, long long>> LLMoney_Ranking(unsigned short num = 5);
