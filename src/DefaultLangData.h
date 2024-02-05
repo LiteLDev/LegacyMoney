@@ -1,5 +1,5 @@
 #pragma once
-#include "ll/api/i18n/I18nAPI.h"
+#include <ll/api/i18n/I18n.h>
 
 static const ll::i18n::SingleFileI18N::LangData defaultLangData = {
     {"en",

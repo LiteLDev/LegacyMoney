@@ -1,5 +1,5 @@
 add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
-add_requires("levilamina")
+add_requires("levilamina 0.7.1")
 
 add_requires("sqlitecpp 3.2.1")
 add_requires("openssl 1.1.1-t")

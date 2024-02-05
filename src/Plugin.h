@@ -1,6 +1,8 @@
 #pragma once
 
+#include <ll/api/base/Concepts.h>
 #include <ll/api/plugin/NativePlugin.h>
+
 
 namespace legacymoney {
 
