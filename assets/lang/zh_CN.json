@@ -1,0 +1,21 @@
+{
+    "LegacyMoney's main command": "LegacyMoney的主命令",
+    "Your balance: ": "你的余额: ",
+    "'s balance: ": "的余额: ",
+    "Please type the name of player you want to query": "请输入你想查询玩家的昵称",
+    "Player not found": "未找到玩家",
+    "You don't have permission to do this": "你没有权限来执行这条命令",
+    "Added ": "增加了 ",
+    " to ": " 给 ",
+    "Failed to add money": "增加余额失败",
+    "Reduced ": "减少了 ",
+    "Failed to reduce money": "减少余额失败",
+    "Set ": "设置 ",
+    "'s money to ": " 的余额为 ",
+    "Failed to set money": "设置余额失败",
+    "Origin not found!": "未找到玩家",
+    "Console is not allowed to use this command": "控制台不被允许使用此命令",
+    "It's a dangerous operation which will clean all the economy history database, if you confrm that, please type /money purge confirm ": "这是一个危险的操作，这会清除经济历史数据库中的所有内容，如果你确定要这么做，请输入 /money purge confirm ",
+    "Clear history successfully": "清空历史记录成功",
+    "Money ranking:": "金钱排行榜:"
+}

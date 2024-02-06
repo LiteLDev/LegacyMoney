@@ -163,7 +163,7 @@ void RegisterMoneyCommands() {
                                            .append(std::to_string(LLMoney_Get(static_cast<Player*>(actor)->getXuid())))
                         );
                     } else {
-                        output.error("No player found"_tr());
+                        output.error("Player not found"_tr());
                     }
                 }
             } else {
@@ -420,7 +420,7 @@ void RegisterMoneyCommands() {
         .execute<[&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
             if (origin.getPermissionsLevel() >= CommandPermissionLevel::GameDirectors) {
                 output.error(
-                    "It's a dangerous operation which will clean all the economy database, if you confrm "
+                    "It's a dangerous operation which will clean all the economy history database, if you confrm "
                     "that, please type /money purge confirm "_tr()
                     + std::to_string(param.time)
                 );

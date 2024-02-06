@@ -91,8 +91,8 @@ function pack_plugin(target,plugin_define)
     import("lib.detect.find_file")
 
     local manifest_path = find_file("manifest.json", os.projectdir())
-    local bindir = path.join(os.projectdir(), "bin")
     if manifest_path then
+        local bindir = path.join(os.projectdir(), "bin")
         local manifest = io.readfile(manifest_path)
         local outputdir = path.join(bindir, plugin_define.pluginName)
         local targetfile = path.join(outputdir, plugin_define.pluginFile)
@@ -109,18 +109,20 @@ function pack_plugin(target,plugin_define)
 
         formattedmanifest = string_formatter(manifest, plugin_define)
         io.writefile(manifestfile,formattedmanifest)
+
+        local includedir = path.join(bindir, "include")
+        local libdir = path.join(bindir, "lib")
+        local header = path.join(os.projectdir(), "src", "LLMoney.h")
+        local langdir = path.join(os.projectdir(), "assets", "lang")
+        os.mkdir(includedir)
+        os.mkdir(libdir)
+        os.cp(header, includedir)
+        os.cp(path.join(target:targetdir(), "LegacyMoney.lib"), libdir)
+        os.cp(langdir, outputdir)
         cprint("${bright green}[Plugin Packer]: ${reset}plugin already generated to " .. outputdir)
     else
         cprint("${bright yellow}warn: ${reset}not found manifest.json in root dir!")
     end
-
-    local includedir = path.join(bindir, "include")
-    local libdir = path.join(bindir, "lib")
-    local header = path.join(os.projectdir(), "src", "LLMoney.h")
-    os.mkdir(includedir)
-    os.mkdir(libdir)
-    os.cp(header, includedir)
-    os.cp(path.join(target:targetdir(), "LegacyMoney.lib"), libdir)
 end
 
 
