@@ -1,21 +1,21 @@
 {
     "format_version": 2,
     "tooth": "github.com/LiteLDev/LegacyMoney",
-    "version": "0.1.6",
+    "version": "0.2.0",
     "info": {
         "name": "LegacyMoney",
         "description": "LLMoney, but adapted to LeviLamina",
         "author": "LiteLDev",
         "tags": [
             "plugin",
-            "ll",
+            "levilamina",
             "library",
             "economy"
         ]
     },
-    "asset_url": "https://github.com/LiteLDev/LegacyMoney/releases/download/v0.1.6/LegacyMoney-windows-x64.zip",
+    "asset_url": "https://github.com/LiteLDev/LegacyMoney/releases/download/v0.2.0/LegacyMoney-windows-x64.zip",
     "prerequisites": {
-        "github.com/LiteLDev/LeviLamina": "0.6.x"
+        "github.com/LiteLDev/LeviLamina": "0.7.x"
     },
     "files": {
         "place": [

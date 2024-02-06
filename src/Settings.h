@@ -6,6 +6,7 @@ extern int         def_money;
 extern float       pay_tax;
 extern bool        enable_ranking;
 extern bool        enable_commands;
+extern std::string currency_symbol;
 
 nlohmann::json globaljson();
 
