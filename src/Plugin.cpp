@@ -1,30 +1,23 @@
 #include "Plugin.h"
-#include "DefaultLangData.h"
 #include "LLMoney.h"
 #include "Plugin.h"
 #include "Settings.h"
 #include "ll/api/Logger.h"
-#include "ll/api/command/Command.h"
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/command/CommandRegistrar.h"
-#include "ll/api/event/EventBus.h"
-#include "ll/api/event/ListenerBase.h"
 #include "ll/api/i18n/I18n.h"
 #include "ll/api/plugin/NativePlugin.h"
 #include "ll/api/service/Bedrock.h"
 #include "ll/api/service/PlayerInfo.h"
 #include "mc/common/wrapper/optional_ref.h"
-#include "mc/server/ServerPlayer.h"
 #include "mc/server/commands/CommandOriginType.h"
 #include "mc/server/commands/CommandOutput.h"
-#include "mc/server/commands/CommandOutputMessageType.h"
 #include "mc/server/commands/CommandPermissionLevel.h"
 #include "mc/server/commands/CommandSelector.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/Level.h"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
-#include "sqlitecpp/SQLiteCpp.h"
 #include <string>
 
 
@@ -482,8 +475,8 @@ Plugin::Plugin(ll::plugin::NativePlugin& self) : mSelf(self) {
     if (!initDB()) {
         return;
     }
-    ll::i18n::getInstance() = std::make_unique<ll::i18n::SingleFileI18N>(
-        ll::i18n::SingleFileI18N("plugins/LegacyMoney/language.json", Settings::language, defaultLangData)
+    ll::i18n::getInstance() = std::make_unique<ll::i18n::MultiFileI18N>(
+        ll::i18n::MultiFileI18N("plugins/LegacyMoney/lang", Settings::language)
     );
 }
 
