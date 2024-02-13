@@ -15,7 +15,7 @@
     },
     "asset_url": "https://github.com/LiteLDev/LegacyMoney/releases/download/v0.2.1/LegacyMoney-windows-x64.zip",
     "prerequisites": {
-        "github.com/LiteLDev/LeviLamina": "0.7.x"
+        "github.com/LiteLDev/LeviLamina": "0.8.x"
     },
     "files": {
         "place": [
