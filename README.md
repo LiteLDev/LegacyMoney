@@ -14,11 +14,11 @@ lip install github.com/LiteLDev/LegacyMoney
 # Usage
 
 | Command                     | Description                        | Permission |
-|-----------------------------|------------------------------------|------------|
-| /money query(s) [player]       | Query your/other players's balance | Player/OP  |
-| /money pay(s) player amount    | Transfer money to a player         | Player     |
-| /money set(s) player amount    | Set player's balance               | OP         |
-| /money add(s) player amount    | Add player's balance               | OP         |
+| --------------------------- | ---------------------------------- | ---------- |
+| /money query(s) [player]    | Query your/other players's balance | Player/OP  |
+| /money pay(s) player amount | Transfer money to a player         | Player     |
+| /money set(s) player amount | Set player's balance               | OP         |
+| /money add(s) player amount | Add player's balance               | OP         |
 | /money reduce player amount | Reduce player's balance            | OP         |
 | /money hist                 | Print your running account         | Player     |
 | /money purge                | Clear your running account         | OP         |
@@ -28,9 +28,10 @@ lip install github.com/LiteLDev/LegacyMoney
 
 ```jsonc
 {
+    "currency_symbol": "$",
+    "def_money": 0, // Default money value
+    "enable_commands": true,
     "language": "en",
-    "def_money": 0, // Default money
-    "pay_tax": 0.0,
-    "currency_symbol" "$"
+    "pay_tax": 0.0
 }
 ```

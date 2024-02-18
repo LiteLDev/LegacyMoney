@@ -30,7 +30,6 @@ namespace Settings {
 std::string language        = "en";
 int         def_money       = 0;
 float       pay_tax         = 0.0;
-bool        enable_ranking  = true;
 bool        enable_commands = true;
 std::string currency_symbol = "$";
 
@@ -39,7 +38,6 @@ nlohmann::json globaljson() {
     json["language"]        = language;
     json["def_money"]       = def_money;
     json["pay_tax"]         = pay_tax;
-    json["enable_ranking"]  = enable_ranking;
     json["enable_commands"] = enable_commands;
     json["currency_symbol"] = currency_symbol;
     return json;
@@ -49,7 +47,6 @@ void initjson(nlohmann::json json) {
     JSON1("language", language);
     JSON1("def_money", def_money);
     JSON1("pay_tax", pay_tax);
-    JSON1("enable_ranking", enable_ranking);
     JSON1("enable_commands", enable_commands);
     JSON1("currency_symbol", currency_symbol);
 }
