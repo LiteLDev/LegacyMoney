@@ -20,9 +20,6 @@
 #include "nlohmann/json_fwd.hpp"
 #include <string>
 
-
-ll::Logger* logger;
-
 #define JSON1(key, val)                                                                                                \
     if (json.find(key) != json.end()) {                                                                                \
         const nlohmann::json& out = json.at(key);                                                                      \
@@ -43,6 +40,7 @@ nlohmann::json globaljson() {
     json["def_money"]       = def_money;
     json["pay_tax"]         = pay_tax;
     json["enable_ranking"]  = enable_ranking;
+    json["enable_commands"] = enable_commands;
     json["currency_symbol"] = currency_symbol;
     return json;
 }
@@ -52,13 +50,14 @@ void initjson(nlohmann::json json) {
     JSON1("def_money", def_money);
     JSON1("pay_tax", pay_tax);
     JSON1("enable_ranking", enable_ranking);
+    JSON1("enable_commands", enable_commands);
     JSON1("currency_symbol", currency_symbol);
 }
 void WriteDefaultConfig(const std::string& fileName) {
 
     std::ofstream file(fileName);
     if (!file.is_open()) {
-        logger->error("Can't open file {}", fileName);
+        legacymoney::getSelfPluginInstance().getLogger().error("Can't open file {}", fileName);
         return;
     }
     auto json = globaljson();
@@ -69,7 +68,7 @@ void WriteDefaultConfig(const std::string& fileName) {
 void LoadConfigFromJson(const std::string& fileName) {
     std::ifstream file(fileName);
     if (!file.is_open()) {
-        logger->error("Can't open file {}", fileName);
+        legacymoney::getSelfPluginInstance().getLogger().error("Can't open file {}", fileName);
         return;
     }
     nlohmann::json json;
@@ -83,7 +82,7 @@ void reloadJson(const std::string& fileName) {
     if (file) {
         file << globaljson().dump(4);
     } else {
-        logger->error("Configuration File Creation failed!");
+        legacymoney::getSelfPluginInstance().getLogger().error("Configuration File Creation failed!");
     }
     file.close();
 }
@@ -102,9 +101,12 @@ void loadCfg() {
         try {
             Settings::LoadConfigFromJson("plugins/LegacyMoney/money.json");
         } catch (std::exception& e) {
-            logger->error("Configuration file is Invalid, Error: {}", e.what());
+            legacymoney::getSelfPluginInstance().getLogger().error(
+                "Configuration file is Invalid, Error: {}",
+                e.what()
+            );
         } catch (...) {
-            logger->error("Configuration file is Invalid");
+            legacymoney::getSelfPluginInstance().getLogger().error("Configuration file is Invalid");
         }
     } else {
         Settings::WriteDefaultConfig("plugins/LegacyMoney/money.json");
@@ -468,25 +470,54 @@ void RegisterMoneyCommands() {
 
 namespace legacymoney {
 
-Plugin::Plugin(ll::plugin::NativePlugin& self) : mSelf(self) {
-    logger = &mSelf.getLogger();
-    mSelf.getLogger().info("Loaded!");
-    loadCfg();
-    if (!initDB()) {
-        return;
-    }
-    ll::i18n::getInstance() = std::make_unique<ll::i18n::MultiFileI18N>(
-        ll::i18n::MultiFileI18N("plugins/LegacyMoney/lang", Settings::language)
-    );
-}
+namespace {
 
-bool Plugin::enable() {
+std::unique_ptr<std::reference_wrapper<ll::plugin::NativePlugin>>
+    selfPluginInstance; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
+auto disable(ll::plugin::NativePlugin& /*self*/) -> bool { return true; }
+
+auto enable(ll::plugin::NativePlugin& /*self*/) -> bool {
     if (Settings::enable_commands) {
         RegisterMoneyCommands();
     }
     return true;
+    return true;
 }
 
-bool Plugin::disable() { return true; }
+auto load(ll::plugin::NativePlugin& self) -> bool {
+    auto& logger       = self.getLogger();
+    selfPluginInstance = std::make_unique<std::reference_wrapper<ll::plugin::NativePlugin>>(self);
+    logger.info("Loaded!");
+    loadCfg();
+    if (!initDB()) {
+        return false;
+    }
+    ll::i18n::getInstance() = std::make_unique<ll::i18n::MultiFileI18N>(
+        ll::i18n::MultiFileI18N("plugins/LegacyMoney/lang", Settings::language)
+    );
+    return true;
+}
+
+auto unload(ll::plugin::NativePlugin& self) -> bool { return true; }
+
+} // namespace
+
+auto getSelfPluginInstance() -> ll::plugin::NativePlugin& {
+    if (!selfPluginInstance) {
+        throw std::runtime_error("selfPluginInstance is null");
+    }
+
+    return *selfPluginInstance;
+}
 
 } // namespace legacymoney
+
+extern "C" {
+_declspec(dllexport) auto ll_plugin_disable(ll::plugin::NativePlugin& self) -> bool {
+    return legacymoney::disable(self);
+}
+_declspec(dllexport) auto ll_plugin_enable(ll::plugin::NativePlugin& self) -> bool { return legacymoney::enable(self); }
+_declspec(dllexport) auto ll_plugin_load(ll::plugin::NativePlugin& self) -> bool { return legacymoney::load(self); }
+_declspec(dllexport) auto ll_plugin_unload(ll::plugin::NativePlugin& self) -> bool { return legacymoney::unload(self); }
+}
