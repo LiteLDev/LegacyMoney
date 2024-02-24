@@ -1,5 +1,8 @@
 {
     "name": "${pluginName}",
     "entry": "${pluginFile}",
-    "type": "native"
+    "type": "native",
+    "description": "LLMoney, but adapted to LeviLamina",
+    "author": "LiteLDev",
+    "version": "0.4.0"
 }

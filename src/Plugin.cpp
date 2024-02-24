@@ -444,7 +444,10 @@ void RegisterMoneyCommands() {
         .optional("number")
         .execute<[&](CommandOrigin const& origin, CommandOutput& output, TopMoney const& param, Command const&) {
             if (param.number) {
-                auto rank = LLMoney_Ranking(param.number);
+                auto rank = LLMoney_Ranking(
+                    (param.number > 100 && origin.getPermissionsLevel() == CommandPermissionLevel::Any) ? 100
+                                                                                                        : param.number
+                );
                 output.success("Money ranking:"_tr());
                 for (auto i : rank) {
                     auto info = ll::service::PlayerInfo::getInstance().fromXuid(i.first);
@@ -453,7 +456,7 @@ void RegisterMoneyCommands() {
                     }
                 }
             } else {
-                auto rank = LLMoney_Ranking();
+                auto rank = LLMoney_Ranking(10);
                 output.success("Money ranking:"_tr());
                 for (auto i : rank) {
                     auto info = ll::service::PlayerInfo::getInstance().fromXuid(i.first);
