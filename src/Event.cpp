@@ -23,6 +23,6 @@ void CallAfterEvent(LLMoneyEvent event, std::string from, std::string to, long l
     }
 }
 
-void LLMoneyListenBeforeEvent(LLMoneyCallback callback) { beforeCallbacks.push_back(callback); }
+void LLMoney_ListenBeforeEvent(LLMoneyCallback callback) { beforeCallbacks.push_back(callback); }
 
-void LLMoneyListenAfterEvent(LLMoneyCallback callback) { afterCallbacks.push_back(callback); }
+void LLMoney_ListenAfterEvent(LLMoneyCallback callback) { afterCallbacks.push_back(callback); }
