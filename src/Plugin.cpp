@@ -7,6 +7,7 @@
 #include "ll/api/command/CommandRegistrar.h"
 #include "ll/api/i18n/I18n.h"
 #include "ll/api/plugin/NativePlugin.h"
+#include "ll/api/plugin/RegisterHelper.h"
 #include "ll/api/service/Bedrock.h"
 #include "ll/api/service/PlayerInfo.h"
 #include "mc/common/wrapper/optional_ref.h"
@@ -19,6 +20,7 @@
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include <string>
+
 
 #define JSON1(key, val)                                                                                                \
     if (json.find(key) != json.end()) {                                                                                \
@@ -54,7 +56,7 @@ void WriteDefaultConfig(const std::string& fileName) {
 
     std::ofstream file(fileName);
     if (!file.is_open()) {
-        legacymoney::getSelfPluginInstance().getLogger().error("Can't open file {}", fileName);
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Can't open file {}", fileName);
         return;
     }
     auto json = globaljson();
@@ -65,7 +67,7 @@ void WriteDefaultConfig(const std::string& fileName) {
 void LoadConfigFromJson(const std::string& fileName) {
     std::ifstream file(fileName);
     if (!file.is_open()) {
-        legacymoney::getSelfPluginInstance().getLogger().error("Can't open file {}", fileName);
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Can't open file {}", fileName);
         return;
     }
     nlohmann::json json;
@@ -79,7 +81,7 @@ void reloadJson(const std::string& fileName) {
     if (file) {
         file << globaljson().dump(4);
     } else {
-        legacymoney::getSelfPluginInstance().getLogger().error("Configuration File Creation failed!");
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Configuration File Creation failed!");
     }
     file.close();
 }
@@ -98,12 +100,12 @@ void loadCfg() {
         try {
             Settings::LoadConfigFromJson("plugins/LegacyMoney/money.json");
         } catch (std::exception& e) {
-            legacymoney::getSelfPluginInstance().getLogger().error(
+            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error(
                 "Configuration file is Invalid, Error: {}",
                 e.what()
             );
         } catch (...) {
-            legacymoney::getSelfPluginInstance().getLogger().error("Configuration file is Invalid");
+            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Configuration file is Invalid");
         }
     } else {
         Settings::WriteDefaultConfig("plugins/LegacyMoney/money.json");
@@ -150,7 +152,7 @@ void RegisterMoneyCommands() {
     command.overload<QueryMoney>()
         .text("query")
         .optional("playerName")
-        .execute<[&](CommandOrigin const& origin, CommandOutput& output, QueryMoney const& param, Command const&) {
+        .execute([&](CommandOrigin const& origin, CommandOutput& output, QueryMoney const& param, Command const&) {
             if (param.playerName.empty()) {
                 if (origin.getOriginType() != CommandOriginType::Player) {
                     output.error("Please type the name of player you want to query"_tr());
@@ -183,37 +185,35 @@ void RegisterMoneyCommands() {
                     output.error("You don't have permission to do this"_tr());
                 }
             }
-        }>();
-    command.overload<QueryMoneySelector>()
-        .text("querys")
-        .required("player")
-        .execute<
-            [&](CommandOrigin const& origin, CommandOutput& output, QueryMoneySelector const& param, Command const&) {
-                if (origin.getPermissionsLevel() >= CommandPermissionLevel::GameDirectors) {
-                    if (param.player.results(origin).size()) {
-                        auto it = param.player.results(origin).data;
-                        for (Player* player : *it) {
-                            if (player) {
-                                output.success(
-                                    player->getRealName()
-                                    + "'s balance: "_tr()
-                                          .append(Settings::currency_symbol)
-                                          .append(std::to_string(LLMoney_Get(player->getXuid())))
-                                );
-                            }
+        });
+    command.overload<QueryMoneySelector>().text("querys").required("player").execute(
+        [&](CommandOrigin const& origin, CommandOutput& output, QueryMoneySelector const& param, Command const&) {
+            if (origin.getPermissionsLevel() >= CommandPermissionLevel::GameDirectors) {
+                if (param.player.results(origin).size()) {
+                    auto it = param.player.results(origin).data;
+                    for (Player* player : *it) {
+                        if (player) {
+                            output.success(
+                                player->getRealName()
+                                + "'s balance: "_tr()
+                                      .append(Settings::currency_symbol)
+                                      .append(std::to_string(LLMoney_Get(player->getXuid())))
+                            );
                         }
-                    } else {
-                        output.error("Player not found"_tr());
                     }
                 } else {
-                    output.error("You don't have permission to do this"_tr());
+                    output.error("Player not found"_tr());
                 }
-            }>();
+            } else {
+                output.error("You don't have permission to do this"_tr());
+            }
+        }
+    );
     command.overload<OperateMoney>()
         .required("operation")
         .required("playerName")
         .required("amount")
-        .execute<[&](CommandOrigin const& origin, CommandOutput& output, OperateMoney const& param, Command const&) {
+        .execute([&](CommandOrigin const& origin, CommandOutput& output, OperateMoney const& param, Command const&) {
             switch (param.operation) {
             case MoneyOperation::add: {
                 if (origin.getPermissionsLevel() >= CommandPermissionLevel::GameDirectors) {
@@ -296,12 +296,12 @@ void RegisterMoneyCommands() {
             default:
                 break;
             }
-        }>();
+        });
     command.overload<OperateMoneySelector>()
         .required("operation")
         .required("player")
         .required("amount")
-        .execute<
+        .execute(
             [&](CommandOrigin const& origin, CommandOutput& output, OperateMoneySelector const& param, Command const&) {
                 switch (param.operation) {
                 case MoneyOperationSelector::adds: {
@@ -373,12 +373,13 @@ void RegisterMoneyCommands() {
                 default:
                     break;
                 }
-            }>();
+            }
+        );
     command.overload<MoneyOthers>()
         .text("hist")
         .required("playerName")
         .optional("time")
-        .execute<[&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
+        .execute([&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
             if (origin.getPermissionsLevel() >= CommandPermissionLevel::GameDirectors) {
                 auto info = ll::service::PlayerInfo::getInstance().fromName(param.playerName);
                 if (info.has_value()) {
@@ -393,11 +394,9 @@ void RegisterMoneyCommands() {
             } else {
                 output.error("You don't have permission to do this"_tr());
             }
-        }>();
-    command.overload<MoneyOthers>()
-        .text("hist")
-        .optional("time")
-        .execute<[&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
+        });
+    command.overload<MoneyOthers>().text("hist").optional("time").execute(
+        [&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
             if (origin.getOriginType() == CommandOriginType::Player) {
                 Actor* actor = origin.getEntity();
                 if (actor) {
@@ -412,11 +411,10 @@ void RegisterMoneyCommands() {
             } else {
                 output.error("Console is not allowed to use this command"_tr());
             }
-        }>();
-    command.overload<MoneyOthers>()
-        .text("purge")
-        .optional("time")
-        .execute<[&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
+        }
+    );
+    command.overload<MoneyOthers>().text("purge").optional("time").execute(
+        [&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
             if (origin.getPermissionsLevel() >= CommandPermissionLevel::GameDirectors) {
                 output.error(
                     "It's a dangerous operation which will clean all the economy history database, if you confrm "
@@ -426,23 +424,20 @@ void RegisterMoneyCommands() {
             } else {
                 output.error("You don't have permission to do this"_tr());
             }
-        }>();
-    command.overload<MoneyOthers>()
-        .text("purge")
-        .text("confirm")
-        .optional("time")
-        .execute<[&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
+        }
+    );
+    command.overload<MoneyOthers>().text("purge").text("confirm").optional("time").execute(
+        [&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
             if (origin.getPermissionsLevel() >= CommandPermissionLevel::GameDirectors) {
                 LLMoney_ClearHist(param.time);
                 output.success("Clear history successfully"_tr());
             } else {
                 output.error("You don't have permission to do this"_tr());
             }
-        }>();
-    command.overload<TopMoney>()
-        .text("top")
-        .optional("number")
-        .execute<[&](CommandOrigin const& origin, CommandOutput& output, TopMoney const& param, Command const&) {
+        }
+    );
+    command.overload<TopMoney>().text("top").optional("number").execute(
+        [&](CommandOrigin const& origin, CommandOutput& output, TopMoney const& param, Command const&) {
             if (param.number) {
                 auto rank = LLMoney_Ranking(
                     (param.number > 100 && origin.getPermissionsLevel() == CommandPermissionLevel::Any) ? 100
@@ -465,29 +460,20 @@ void RegisterMoneyCommands() {
                     }
                 }
             }
-        }>();
+        }
+    );
 }
 
-namespace legacymoney {
+namespace legacy_money {
 
-namespace {
+static std::unique_ptr<LegacyMoney> instance;
 
-std::unique_ptr<std::reference_wrapper<ll::plugin::NativePlugin>>
-    selfPluginInstance; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+LegacyMoney& LegacyMoney::getInstance() { return *instance; }
 
-auto disable(ll::plugin::NativePlugin& /*self*/) -> bool { return true; }
-
-auto enable(ll::plugin::NativePlugin& /*self*/) -> bool {
-    if (Settings::enable_commands) {
-        RegisterMoneyCommands();
-    }
-    return true;
-    return true;
-}
-
-auto load(ll::plugin::NativePlugin& self) -> bool {
-    auto& logger       = self.getLogger();
-    selfPluginInstance = std::make_unique<std::reference_wrapper<ll::plugin::NativePlugin>>(self);
+bool LegacyMoney::load() {
+    getSelf().getLogger().info("Loading...");
+    // Code for loading the plugin goes here.
+    auto& logger = getSelf().getLogger();
     logger.info("Loaded!");
     loadCfg();
     if (!initDB()) {
@@ -499,25 +485,21 @@ auto load(ll::plugin::NativePlugin& self) -> bool {
     return true;
 }
 
-auto unload(ll::plugin::NativePlugin& self) -> bool { return true; }
-
-} // namespace
-
-auto getSelfPluginInstance() -> ll::plugin::NativePlugin& {
-    if (!selfPluginInstance) {
-        throw std::runtime_error("selfPluginInstance is null");
+bool LegacyMoney::enable() {
+    getSelf().getLogger().info("Enabling...");
+    // Code for enabling the plugin goes here.
+    if (Settings::enable_commands) {
+        RegisterMoneyCommands();
     }
-
-    return *selfPluginInstance;
+    return true;
 }
 
-} // namespace legacymoney
+bool LegacyMoney::disable() {
+    getSelf().getLogger().info("Disabling...");
+    // Code for disabling the plugin goes here.
+    return true;
+}
 
-extern "C" {
-_declspec(dllexport) auto ll_plugin_disable(ll::plugin::NativePlugin& self) -> bool {
-    return legacymoney::disable(self);
-}
-_declspec(dllexport) auto ll_plugin_enable(ll::plugin::NativePlugin& self) -> bool { return legacymoney::enable(self); }
-_declspec(dllexport) auto ll_plugin_load(ll::plugin::NativePlugin& self) -> bool { return legacymoney::load(self); }
-_declspec(dllexport) auto ll_plugin_unload(ll::plugin::NativePlugin& self) -> bool { return legacymoney::unload(self); }
-}
+LL_REGISTER_PLUGIN(LegacyMoney, instance);
+
+} // namespace legacy_money
