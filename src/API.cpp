@@ -116,7 +116,7 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
         }
         if (to != "") {
             auto tmoney  = LLMoney_Get(to);
-            tmoney      += val;
+            tmoney      += val - val * Settings::pay_tax;
             if (tmoney < 0) {
                 db->exec("rollback");
                 return false;
