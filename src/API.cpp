@@ -91,14 +91,18 @@ bool isRealTrans = true;
 bool LLMoney_Trans(std::string from, std::string to, long long val, std::string const& note) {
     bool isRealTrans = ::isRealTrans;
     ::isRealTrans    = true;
-    if (isRealTrans)
-        if (!CallBeforeEvent(LLMoneyEvent::Trans, from, to, val)) return false;
-
-    if (val < 0 || from == to) return false;
+    if (isRealTrans) {
+        if (!CallBeforeEvent(LLMoneyEvent::Trans, from, to, val)) {
+            return false;
+        }
+    }
+    if (val < 0 || from == to) {
+        return false;
+    }
     try {
         db->exec("begin");
         SQLite::Statement set{*db, "update money set Money=? where XUID=?"};
-        if (from != "") {
+        if (!from.empty()) {
             auto fmoney = LLMoney_Get(from);
             if (fmoney < val) {
                 db->exec("rollback");
@@ -114,9 +118,11 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
                 set.clearBindings();
             }
         }
-        if (to != "") {
-            auto tmoney  = LLMoney_Get(to);
-            tmoney      += val - val * Settings::pay_tax;
+        if (!to.empty()) {
+            auto tmoney = LLMoney_Get(to);
+            if (!from.empty()) {
+                tmoney += val - val * Settings::pay_tax;
+            }
             if (tmoney < 0) {
                 db->exec("rollback");
                 return false;
@@ -129,6 +135,7 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
                 set.clearBindings();
             }
         }
+
         {
             SQLite::Statement addTrans{*db, "insert into mtrans (tFrom,tTo,Money,Note) values (?,?,?,?)"};
             addTrans.bindNoCopy(1, from);
@@ -141,7 +148,9 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
         }
         db->exec("commit");
 
-        if (isRealTrans) CallAfterEvent(LLMoneyEvent::Trans, from, to, val);
+        if (isRealTrans) {
+            CallAfterEvent(LLMoneyEvent::Trans, from, to, val);
+        }
         return true;
     } catch (std::exception const& e) {
         db->exec("rollback");
