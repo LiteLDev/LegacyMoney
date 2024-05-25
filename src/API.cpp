@@ -121,7 +121,7 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
         if (!to.empty()) {
             auto tmoney = LLMoney_Get(to);
             if (from.empty()) {
-                tmoney += val
+                tmoney += val;
             } else {
                 tmoney += val - val * Settings::pay_tax;
             }
