@@ -1,14 +1,14 @@
 #include "Plugin.h"
 #include "LLMoney.h"
+#include "Nlohmann/json.hpp"
 #include "Plugin.h"
 #include "Settings.h"
 #include "ll/api/Logger.h"
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/command/CommandRegistrar.h"
 #include "ll/api/i18n/I18n.h"
-#include "ll/api/plugin/NativePlugin.h"
-#include "ll/api/plugin/RegisterHelper.h"
-#include "ll/api/service/Bedrock.h"
+#include "ll/api/mod/NativeMod.h"
+#include "ll/api/mod/RegisterHelper.h"
 #include "ll/api/service/PlayerInfo.h"
 #include "mc/common/wrapper/optional_ref.h"
 #include "mc/server/commands/CommandOriginType.h"
@@ -17,9 +17,9 @@
 #include "mc/server/commands/CommandSelector.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/Level.h"
-#include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include <string>
+
 
 
 #define JSON1(key, val)                                                                                                \
@@ -500,6 +500,6 @@ bool LegacyMoney::disable() {
     return true;
 }
 
-LL_REGISTER_PLUGIN(LegacyMoney, instance);
+LL_REGISTER_MOD(LegacyMoney, instance);
 
 } // namespace legacy_money

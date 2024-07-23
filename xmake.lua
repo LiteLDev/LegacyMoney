@@ -1,5 +1,5 @@
 add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
-add_requires("levilamina 0.13.0")
+add_requires("levilamina 0.13.4")
 
 add_requires("sqlitecpp 3.2.1")
 add_requires("openssl 1.1.1-t")
@@ -35,7 +35,6 @@ target("LegacyMoney")
         "UNICODE",
         "WIN32_LEAN_AND_MEAN",
         "ENTT_PACKED_PAGE=128",
-        "_HAS_CXX23=1",
         "LLMONEY_EXPORTS"
     )
     add_files(
