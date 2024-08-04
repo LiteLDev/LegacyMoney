@@ -1,7 +1,6 @@
-#include "Plugin.h"
+#include "LegacyMoney.h"
 #include "LLMoney.h"
 #include "Nlohmann/json.hpp"
-#include "Plugin.h"
 #include "Settings.h"
 #include "ll/api/Logger.h"
 #include "ll/api/command/CommandHandle.h"
@@ -19,7 +18,6 @@
 #include "mc/world/level/Level.h"
 #include "nlohmann/json_fwd.hpp"
 #include <string>
-
 
 
 #define JSON1(key, val)                                                                                                \
@@ -471,10 +469,6 @@ static std::unique_ptr<LegacyMoney> instance;
 LegacyMoney& LegacyMoney::getInstance() { return *instance; }
 
 bool LegacyMoney::load() {
-    getSelf().getLogger().info("Loading...");
-    // Code for loading the plugin goes here.
-    auto& logger = getSelf().getLogger();
-    logger.info("Loaded!");
     loadCfg();
     if (!initDB()) {
         return false;
@@ -486,19 +480,13 @@ bool LegacyMoney::load() {
 }
 
 bool LegacyMoney::enable() {
-    getSelf().getLogger().info("Enabling...");
-    // Code for enabling the plugin goes here.
     if (Settings::enable_commands) {
         RegisterMoneyCommands();
     }
     return true;
 }
 
-bool LegacyMoney::disable() {
-    getSelf().getLogger().info("Disabling...");
-    // Code for disabling the plugin goes here.
-    return true;
-}
+bool LegacyMoney::disable() { return true; }
 
 LL_REGISTER_MOD(LegacyMoney, instance);
 
