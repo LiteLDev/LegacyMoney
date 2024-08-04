@@ -89,8 +89,7 @@ bool initDB();
 
 bool cmp(std::pair<std::string, long long> a, std::pair<std::string, long long> b) { return a.second > b.second; }
 
-
-using ll::i18n_literals::operator""_tr;
+using namespace ll::i18n_literals;
 
 void loadCfg() {
     // config

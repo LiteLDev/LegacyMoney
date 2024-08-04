@@ -1,5 +1,6 @@
 #include "Event.h"
 #include "LLMoney.h"
+#include "LegacyMoney.h"
 #include "Settings.h"
 #include "ll/api/Logger.h"
 #include "ll/api/service/PlayerInfo.h"
@@ -7,9 +8,7 @@
 #include <memory>
 #include <vector>
 
-
 static std::unique_ptr<SQLite::Database> db;
-ll::Logger                               moneylog("LLMoney");
 #undef snprintf
 
 struct cleanSTMT {
@@ -52,7 +51,7 @@ bool initDB() {
 			Time COLLATE BINARY COLLATE BINARY DESC \
 		); ");
     } catch (std::exception const& e) {
-        moneylog.error("Database error: {}", e.what());
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Database error: {}", e.what());
         return false;
     }
     ConvertData();
@@ -81,7 +80,7 @@ long long LLMoney_Get(std::string xuid) {
         }
         return rv;
     } catch (std::exception const& e) {
-        moneylog.error("Database error: {}\n", e.what());
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Database error: {}\n", e.what());
         return -1;
     }
 }
@@ -156,7 +155,7 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
         return true;
     } catch (std::exception const& e) {
         db->exec("rollback");
-        moneylog.error("Database error: {}\n", e.what());
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Database error: {}\n", e.what());
         return false;
     }
 }
@@ -214,7 +213,7 @@ std::vector<std::pair<std::string, long long>> LLMoney_Ranking(unsigned short nu
         get.clearBindings();
         return mapTemp;
     } catch (std::exception const& e) {
-        moneylog.error("Database error: {}\n", e.what());
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Database error: {}\n", e.what());
         return {};
     }
 }
@@ -249,7 +248,7 @@ std::string LLMoney_GetHist(std::string xuid, int timediff) {
         get.clearBindings();
         return rv;
     } catch (std::exception const& e) {
-        moneylog.error("Database error: {}\n", e.what());
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Database error: {}\n", e.what());
         return "failed";
     }
 }
@@ -262,7 +261,9 @@ void LLMoney_ClearHist(int difftime) {
 
 void ConvertData() {
     if (std::filesystem::exists("plugins\\LLMoney\\money.db")) {
-        moneylog.info("Old money data detected, try to convert old data to new data");
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().info(
+            "Old money data detected, try to convert old data to new data"
+        );
         try {
             std::unique_ptr<SQLite::Database> db2 = std::make_unique<SQLite::Database>(
                 "plugins\\LLMoney\\money.db",
@@ -285,10 +286,10 @@ void ConvertData() {
             }
             get.reset();
         } catch (std::exception& e) {
-            moneylog.error("{}", e.what());
+            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("{}", e.what());
         }
         std::filesystem::rename("plugins\\LLMoney\\money.db", "plugins\\LLMoney\\money_old.db");
-        moneylog.info("Conversion completed");
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().info("Conversion completed");
     }
 }
 // #include <RemoteCallAPI.h>

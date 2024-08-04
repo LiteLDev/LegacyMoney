@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "ll/api/service/PlayerInfo.h"
+#include <vector>
 
 #ifdef LLMONEY_EXPORTS
 #define LLMONEY_API __declspec(dllexport)
