@@ -1,7 +1,7 @@
 #include "LegacyMoney.h"
+#include "Config.h"
 #include "LLMoney.h"
-#include "Nlohmann/json.hpp"
-#include "Settings.h"
+#include "ll/api/Config.h"
 #include "ll/api/Logger.h"
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/command/CommandRegistrar.h"
@@ -9,6 +9,7 @@
 #include "ll/api/mod/NativeMod.h"
 #include "ll/api/mod/RegisterHelper.h"
 #include "ll/api/service/PlayerInfo.h"
+#include "ll/api/utils/ErrorUtils.h"
 #include "mc/common/wrapper/optional_ref.h"
 #include "mc/server/commands/CommandOriginType.h"
 #include "mc/server/commands/CommandOutput.h"
@@ -16,98 +17,9 @@
 #include "mc/server/commands/CommandSelector.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/Level.h"
-#include "nlohmann/json_fwd.hpp"
 #include <string>
 
-
-#define JSON1(key, val)                                                                                                \
-    if (json.find(key) != json.end()) {                                                                                \
-        const nlohmann::json& out = json.at(key);                                                                      \
-        out.get_to(val);                                                                                               \
-    }
-
-namespace Settings {
-std::string language        = "en";
-int         def_money       = 0;
-float       pay_tax         = 0.0;
-bool        enable_commands = true;
-std::string currency_symbol = "$";
-
-nlohmann::json globaljson() {
-    nlohmann::json json;
-    json["language"]        = language;
-    json["def_money"]       = def_money;
-    json["pay_tax"]         = pay_tax;
-    json["enable_commands"] = enable_commands;
-    json["currency_symbol"] = currency_symbol;
-    return json;
-}
-
-void initjson(nlohmann::json json) {
-    JSON1("language", language);
-    JSON1("def_money", def_money);
-    JSON1("pay_tax", pay_tax);
-    JSON1("enable_commands", enable_commands);
-    JSON1("currency_symbol", currency_symbol);
-}
-void WriteDefaultConfig(const std::string& fileName) {
-
-    std::ofstream file(fileName);
-    if (!file.is_open()) {
-        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Can't open file {}", fileName);
-        return;
-    }
-    auto json = globaljson();
-    file << json.dump(4);
-    file.close();
-}
-
-void LoadConfigFromJson(const std::string& fileName) {
-    std::ifstream file(fileName);
-    if (!file.is_open()) {
-        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Can't open file {}", fileName);
-        return;
-    }
-    nlohmann::json json;
-    file >> json;
-    file.close();
-    initjson(json);
-    WriteDefaultConfig(fileName);
-}
-void reloadJson(const std::string& fileName) {
-    std::ofstream file(fileName);
-    if (file) {
-        file << globaljson().dump(4);
-    } else {
-        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Configuration File Creation failed!");
-    }
-    file.close();
-}
-} // namespace Settings
-
-bool initDB();
-
-bool cmp(std::pair<std::string, long long> a, std::pair<std::string, long long> b) { return a.second > b.second; }
-
 using namespace ll::i18n_literals;
-
-void loadCfg() {
-    // config
-    if (std::filesystem::exists("plugins/LegacyMoney/money.json")) {
-        try {
-            Settings::LoadConfigFromJson("plugins/LegacyMoney/money.json");
-        } catch (std::exception& e) {
-            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error(
-                "Configuration file is Invalid, Error: {}",
-                e.what()
-            );
-        } catch (...) {
-            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Configuration file is Invalid");
-        }
-    } else {
-        Settings::WriteDefaultConfig("plugins/LegacyMoney/money.json");
-    }
-}
 
 struct QueryMoney {
     std::string playerName;
@@ -157,7 +69,7 @@ void RegisterMoneyCommands() {
                     Actor* actor = origin.getEntity();
                     if (actor) {
                         output.success("Your balance: "_tr()
-                                           .append(Settings::currency_symbol)
+                                           .append(legacy_money::getConfig().currency_symbol)
                                            .append(std::to_string(LLMoney_Get(static_cast<Player*>(actor)->getXuid())))
                         );
                     } else {
@@ -171,7 +83,7 @@ void RegisterMoneyCommands() {
                         output.success(
                             param.playerName
                             + "'s balance: "_tr()
-                                  .append(Settings::currency_symbol)
+                                  .append(legacy_money::getConfig().currency_symbol)
                                   .append(std::to_string(LLMoney_Get(info->xuid)))
                         );
 
@@ -193,7 +105,7 @@ void RegisterMoneyCommands() {
                             output.success(
                                 player->getRealName()
                                 + "'s balance: "_tr()
-                                      .append(Settings::currency_symbol)
+                                      .append(legacy_money::getConfig().currency_symbol)
                                       .append(std::to_string(LLMoney_Get(player->getXuid())))
                             );
                         }
@@ -218,8 +130,8 @@ void RegisterMoneyCommands() {
                     if (info.has_value()) {
                         if (LLMoney_Add(info->xuid, param.amount)) {
                             output.success(
-                                "Added "_tr() + Settings::currency_symbol + std::to_string(param.amount) + " to "_tr()
-                                + param.playerName
+                                "Added "_tr() + legacy_money::getConfig().currency_symbol + std::to_string(param.amount)
+                                + " to "_tr() + param.playerName
                             );
                         } else {
                             output.error("Failed to add money"_tr());
@@ -238,8 +150,8 @@ void RegisterMoneyCommands() {
                     if (info.has_value()) {
                         if (LLMoney_Reduce(info->xuid, param.amount)) {
                             output.success(
-                                "Reduced "_tr() + Settings::currency_symbol + std::to_string(param.amount) + " to "_tr()
-                                + param.playerName
+                                "Reduced "_tr() + legacy_money::getConfig().currency_symbol
+                                + std::to_string(param.amount) + " to "_tr() + param.playerName
                             );
                         } else {
                             output.error("Failed to reduce money"_tr());
@@ -258,8 +170,8 @@ void RegisterMoneyCommands() {
                     if (info.has_value()) {
                         if (LLMoney_Set(info->xuid, param.amount)) {
                             output.success(
-                                "Set "_tr() + param.playerName + "'s money to "_tr() + Settings::currency_symbol
-                                + std::to_string(param.amount)
+                                "Set "_tr() + param.playerName + "'s money to "_tr()
+                                + legacy_money::getConfig().currency_symbol + std::to_string(param.amount)
                             );
                         } else {
                             output.error("Failed to set money"_tr());
@@ -308,8 +220,8 @@ void RegisterMoneyCommands() {
                             for (Player* player : *it) {
                                 if (LLMoney_Add(player->getXuid(), param.amount)) {
                                     output.success(
-                                        "Added "_tr() + Settings::currency_symbol + std::to_string(param.amount)
-                                        + " to "_tr() + player->getRealName()
+                                        "Added "_tr() + legacy_money::getConfig().currency_symbol
+                                        + std::to_string(param.amount) + " to "_tr() + player->getRealName()
                                     );
                                 } else {
                                     output.error("Failed to reduce money"_tr());
@@ -330,8 +242,8 @@ void RegisterMoneyCommands() {
                             for (Player* player : *it) {
                                 if (LLMoney_Reduce(player->getXuid(), param.amount)) {
                                     output.success(
-                                        "Reduced "_tr() + Settings::currency_symbol + std::to_string(param.amount)
-                                        + " to "_tr() + player->getRealName()
+                                        "Reduced "_tr() + legacy_money::getConfig().currency_symbol
+                                        + std::to_string(param.amount) + " to "_tr() + player->getRealName()
                                     );
                                 } else {
                                     output.error("Failed to reduce money"_tr());
@@ -352,8 +264,8 @@ void RegisterMoneyCommands() {
                             for (Player* player : *it) {
                                 if (LLMoney_Set(player->getXuid(), param.amount)) {
                                     output.success(
-                                        "Set "_tr() + Settings::currency_symbol + std::to_string(param.amount)
-                                        + " to "_tr() + player->getRealName()
+                                        "Set "_tr() + legacy_money::getConfig().currency_symbol
+                                        + std::to_string(param.amount) + " to "_tr() + player->getRealName()
                                     );
                                 } else {
                                     output.error("Failed to set money"_tr());
@@ -444,7 +356,7 @@ void RegisterMoneyCommands() {
                 for (auto i : rank) {
                     auto info = ll::service::PlayerInfo::getInstance().fromXuid(i.first);
                     if (info.has_value()) {
-                        output.success("{} {}{}", info->name, Settings::currency_symbol, i.second);
+                        output.success("{} {}{}", info->name, legacy_money::getConfig().currency_symbol, i.second);
                     }
                 }
             } else {
@@ -453,7 +365,7 @@ void RegisterMoneyCommands() {
                 for (auto i : rank) {
                     auto info = ll::service::PlayerInfo::getInstance().fromXuid(i.first);
                     if (info.has_value()) {
-                        output.success("{} {}{}", info->name, Settings::currency_symbol, i.second);
+                        output.success("{} {}{}", info->name, legacy_money::getConfig().currency_symbol, i.second);
                     }
                 }
             }
@@ -464,22 +376,53 @@ void RegisterMoneyCommands() {
 namespace legacy_money {
 
 static std::unique_ptr<LegacyMoney> instance;
+LegacyMoney&                        LegacyMoney::getInstance() { return *instance; }
+MoneyConfig                         config;
 
-LegacyMoney& LegacyMoney::getInstance() { return *instance; }
+bool loadConfig() {
+    try {
+        if (ll::config::loadConfig(
+                config,
+                legacy_money::LegacyMoney::getInstance().getSelf().getModDir() / "money.json"
+            )) {
+            return true;
+        }
+    } catch (...) {
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to load configuration");
+        ll::error_utils::printCurrentException(legacy_money::LegacyMoney::getInstance().getSelf().getLogger());
+    }
+    try {
+        if (ll::config::saveConfig(
+                config,
+                legacy_money::LegacyMoney::getInstance().getSelf().getModDir() / "money.json"
+            )) {
+            return true;
+        } else {
+            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration");
+        }
+    } catch (...) {
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration");
+        ll::error_utils::printCurrentException(legacy_money::LegacyMoney::getInstance().getSelf().getLogger());
+    }
+    return false;
+}
+
+MoneyConfig& getConfig() { return config; }
+
+bool initDatabase();
 
 bool LegacyMoney::load() {
-    loadCfg();
-    if (!initDB()) {
+    if (!loadConfig() || !initDatabase()) {
         return false;
     }
     ll::i18n::getInstance() = std::make_unique<ll::i18n::MultiFileI18N>(
-        ll::i18n::MultiFileI18N("plugins/LegacyMoney/lang", Settings::language)
+        ll::i18n::MultiFileI18N("plugins/LegacyMoney/lang", legacy_money::getConfig().language)
     );
     return true;
 }
 
 bool LegacyMoney::enable() {
-    if (Settings::enable_commands) {
+    if (legacy_money::getConfig().enable_commands) {
         RegisterMoneyCommands();
     }
     return true;

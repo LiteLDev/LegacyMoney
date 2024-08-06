@@ -1,12 +1,13 @@
+#include "Config.h"
 #include "Event.h"
 #include "LLMoney.h"
 #include "LegacyMoney.h"
-#include "Settings.h"
 #include "ll/api/Logger.h"
 #include "ll/api/service/PlayerInfo.h"
 #include "sqlitecpp/SQLiteCpp.h"
 #include <memory>
 #include <vector>
+
 
 static std::unique_ptr<SQLite::Database> db;
 #undef snprintf
@@ -23,8 +24,8 @@ struct cleanSTMT {
 };
 
 void ConvertData();
-
-bool initDB() {
+namespace legacy_money {
+bool initDatabase() {
     try {
         db = std::make_unique<SQLite::Database>(
             "plugins/LegacyMoney/economy.db",
@@ -57,12 +58,16 @@ bool initDB() {
     ConvertData();
     return true;
 }
+} // namespace legacy_money
 
 long long LLMoney_Get(std::string xuid) {
+    if (xuid.empty()) {
+        return -1;
+    }
     try {
         SQLite::Statement get{*db, "select Money from money where XUID=?"};
         get.bindNoCopy(1, xuid);
-        long long rv = Settings::def_money;
+        long long rv = legacy_money::getConfig().def_money;
         bool      fg = false;
         while (get.executeStep()) {
             rv = (long long)get.getColumn(0).getInt64();
@@ -73,7 +78,7 @@ long long LLMoney_Get(std::string xuid) {
         if (!fg) {
             SQLite::Statement set{*db, "insert into money values (?,?)"};
             set.bindNoCopy(1, xuid);
-            set.bind(2, Settings::def_money);
+            set.bind(2, legacy_money::getConfig().def_money);
             set.exec();
             set.reset();
             set.clearBindings();
@@ -95,7 +100,7 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
             return false;
         }
     }
-    if (val < 0 || from == to) {
+    if (val < 0 || from == to || to.empty()) {
         return false;
     }
     try {
@@ -122,7 +127,7 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
             if (from.empty()) {
                 tmoney += val;
             } else {
-                tmoney += val - val * Settings::pay_tax;
+                tmoney += val - val * legacy_money::getConfig().pay_tax;
             }
             if (tmoney < 0) {
                 db->exec("rollback");
@@ -161,40 +166,53 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
 }
 
 bool LLMoney_Add(std::string xuid, long long money) {
-    if (!CallBeforeEvent(LLMoneyEvent::Add, "", xuid, money)) return false;
+    if (xuid.empty()) {
+        return false;
+    }
+    if (!CallBeforeEvent(LLMoneyEvent::Add, {}, xuid, money)) {
+        return false;
+    }
 
     isRealTrans = false;
-    bool res    = LLMoney_Trans("", xuid, money, "add " + std::to_string(money));
-    if (res) CallAfterEvent(LLMoneyEvent::Add, "", xuid, money);
+    bool res    = LLMoney_Trans({}, xuid, money, "add " + std::to_string(money));
+    if (res) CallAfterEvent(LLMoneyEvent::Add, {}, xuid, money);
     return res;
 }
 
 bool LLMoney_Reduce(std::string xuid, long long money) {
-    if (!CallBeforeEvent(LLMoneyEvent::Reduce, "", xuid, money)) return false;
+    if (xuid.empty()) {
+        return false;
+    }
+    if (!CallBeforeEvent(LLMoneyEvent::Reduce, {}, xuid, money)) {
+        return false;
+    }
 
     isRealTrans = false;
-    bool res    = LLMoney_Trans(xuid, "", money, "reduce " + std::to_string(money));
-    if (res) CallAfterEvent(LLMoneyEvent::Reduce, "", xuid, money);
+    bool res    = LLMoney_Trans(xuid, {}, money, "reduce " + std::to_string(money));
+    if (res) CallAfterEvent(LLMoneyEvent::Reduce, {}, xuid, money);
     return res;
 }
 
 bool LLMoney_Set(std::string xuid, long long money) {
-    if (!CallBeforeEvent(LLMoneyEvent::Set, "", xuid, money)) return false;
+    if (xuid.empty()) {
+        return false;
+    }
+    if (!CallBeforeEvent(LLMoneyEvent::Set, {}, xuid, money)) {
+        return false;
+    }
     long long   now = LLMoney_Get(xuid), diff;
     std::string from, to;
     if (money >= now) {
-        from = "";
         to   = xuid;
         diff = money - now;
     } else {
         from = xuid;
-        to   = "";
         diff = now - money;
     }
 
     isRealTrans = false;
     bool res    = LLMoney_Trans(from, to, diff, "set to " + std::to_string(money));
-    if (res) CallAfterEvent(LLMoneyEvent::Reduce, "", xuid, money);
+    if (res) CallAfterEvent(LLMoneyEvent::Reduce, {}, xuid, money);
     return res;
 }
 
@@ -219,7 +237,9 @@ std::vector<std::pair<std::string, long long>> LLMoney_Ranking(unsigned short nu
 }
 
 std::string LLMoney_GetHist(std::string xuid, int timediff) {
-    ll::service::PlayerInfo& info = ll::service::PlayerInfo::getInstance();
+    if (xuid.empty()) {
+        return {};
+    }
     try {
         SQLite::Statement get{
             *db,
@@ -231,9 +251,10 @@ std::string LLMoney_GetHist(std::string xuid, int timediff) {
         get.bindNoCopy(2, xuid);
         get.bindNoCopy(3, xuid);
         while (get.executeStep()) {
-            std::string from, to;
-            auto        fromPl = info.fromXuid(get.getColumn(0).getString());
-            auto        toPl   = info.fromXuid(get.getColumn(1).getString());
+            std::string              from, to;
+            ll::service::PlayerInfo& info   = ll::service::PlayerInfo::getInstance();
+            auto                     fromPl = info.fromXuid(get.getColumn(0).getString());
+            auto                     toPl   = info.fromXuid(get.getColumn(1).getString());
             if (fromPl) from = fromPl->name;
             if (toPl) to = toPl->name;
             if (from.empty()) {
@@ -249,7 +270,7 @@ std::string LLMoney_GetHist(std::string xuid, int timediff) {
         return rv;
     } catch (std::exception const& e) {
         legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Database error: {}\n", e.what());
-        return "failed";
+        return {};
     }
 }
 
@@ -292,15 +313,3 @@ void ConvertData() {
         legacy_money::LegacyMoney::getInstance().getSelf().getLogger().info("Conversion completed");
     }
 }
-// #include <RemoteCallAPI.h>
-// #define EXPORTAPI(T) RemoteCall::exportAs("LLMoney", #T, T);
-
-// void RemoteCallInit() {
-//     EXPORTAPI(LLMoneyGet);
-//     EXPORTAPI(LLMoneyTrans);
-//     EXPORTAPI(LLMoneyAdd);
-//     EXPORTAPI(LLMoneyReduce);
-//     EXPORTAPI(LLMoneySet);
-//     EXPORTAPI(LLMoneyGetHist);
-//     EXPORTAPI(LLMoneyClearHist);
-// }
