@@ -165,10 +165,7 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
 }
 
 bool LLMoney_Add(std::string xuid, long long money) {
-    if (xuid.empty()) {
-        return false;
-    }
-    if (!CallBeforeEvent(LLMoneyEvent::Add, {}, xuid, money)) {
+    if (xuid.empty() || !CallBeforeEvent(LLMoneyEvent::Add, {}, xuid, money)) {
         return false;
     }
 
@@ -179,10 +176,7 @@ bool LLMoney_Add(std::string xuid, long long money) {
 }
 
 bool LLMoney_Reduce(std::string xuid, long long money) {
-    if (xuid.empty()) {
-        return false;
-    }
-    if (!CallBeforeEvent(LLMoneyEvent::Reduce, {}, xuid, money)) {
+    if (xuid.empty() || !CallBeforeEvent(LLMoneyEvent::Reduce, {}, xuid, money)) {
         return false;
     }
 
@@ -193,10 +187,7 @@ bool LLMoney_Reduce(std::string xuid, long long money) {
 }
 
 bool LLMoney_Set(std::string xuid, long long money) {
-    if (xuid.empty()) {
-        return false;
-    }
-    if (!CallBeforeEvent(LLMoneyEvent::Set, {}, xuid, money)) {
+    if (xuid.empty() || !CallBeforeEvent(LLMoneyEvent::Set, {}, xuid, money)) {
         return false;
     }
     long long   now = LLMoney_Get(xuid), diff;
