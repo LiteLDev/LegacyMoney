@@ -17,5 +17,7 @@
     "Console is not allowed to use this command": "控制台不被允许使用此命令",
     "It's a dangerous operation which will clean all the economy history database, if you confrm that, please type /money purge confirm ": "这是一个危险的操作，这会清除经济历史数据库中的所有内容，如果你确定要这么做，请输入 /money purge confirm ",
     "Clear history successfully": "清空历史记录成功",
-    "Money ranking:": "金钱排行榜:"
+    "Money ranking:": "金钱排行榜:",
+    "Failed to load configuration": "加载配置文件失败",
+    "Failed to rewrite configuration": "重写配置文件失败"
 }

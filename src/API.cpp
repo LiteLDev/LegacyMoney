@@ -28,7 +28,7 @@ namespace legacy_money {
 bool initDatabase() {
     try {
         db = std::make_unique<SQLite::Database>(
-            "plugins/LegacyMoney/economy.db",
+            LegacyMoney::getInstance().getSelf().getModDir() / "economy.db",
             SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE
         );
         db->exec("PRAGMA journal_mode = MEMORY");
@@ -281,13 +281,15 @@ void LLMoney_ClearHist(int difftime) {
 }
 
 void ConvertData() {
-    if (std::filesystem::exists("plugins\\LLMoney\\money.db")) {
+    if (std::filesystem::exists(
+            legacy_money::LegacyMoney::getInstance().getSelf().getModDir() / "LLMoney" / "money.db"
+        )) {
         legacy_money::LegacyMoney::getInstance().getSelf().getLogger().info(
             "Old money data detected, try to convert old data to new data"
         );
         try {
             std::unique_ptr<SQLite::Database> db2 = std::make_unique<SQLite::Database>(
-                "plugins\\LLMoney\\money.db",
+                legacy_money::LegacyMoney::getInstance().getSelf().getModDir() / "LLMoney" / "money.db",
                 SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE
             );
             SQLite::Statement get{*db2, "select hex(XUID),Money from money"};
@@ -309,7 +311,10 @@ void ConvertData() {
         } catch (std::exception& e) {
             legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("{}", e.what());
         }
-        std::filesystem::rename("plugins\\LLMoney\\money.db", "plugins\\LLMoney\\money_old.db");
+        std::filesystem::rename(
+            legacy_money::LegacyMoney::getInstance().getSelf().getModDir() / "LLMoney" / "money.db",
+            legacy_money::LegacyMoney::getInstance().getSelf().getModDir() / "LLMoney" / "money_old.db"
+        );
         legacy_money::LegacyMoney::getInstance().getSelf().getLogger().info("Conversion completed");
     }
 }

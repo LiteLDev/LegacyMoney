@@ -388,7 +388,7 @@ bool loadConfig() {
             return true;
         }
     } catch (...) {
-        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to load configuration");
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to load configuration"_tr());
         ll::error_utils::printCurrentException(legacy_money::LegacyMoney::getInstance().getSelf().getLogger());
     }
     try {
@@ -398,10 +398,11 @@ bool loadConfig() {
             )) {
             return true;
         } else {
-            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration");
+            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration"_tr()
+            );
         }
     } catch (...) {
-        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration");
+        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration"_tr());
         ll::error_utils::printCurrentException(legacy_money::LegacyMoney::getInstance().getSelf().getLogger());
     }
     return false;
@@ -416,7 +417,7 @@ bool LegacyMoney::load() {
         return false;
     }
     ll::i18n::getInstance() = std::make_unique<ll::i18n::MultiFileI18N>(
-        ll::i18n::MultiFileI18N("plugins/LegacyMoney/lang", legacy_money::getConfig().language)
+        ll::i18n::MultiFileI18N(getSelf().getLangDir(), legacy_money::getConfig().language)
     );
     return true;
 }
