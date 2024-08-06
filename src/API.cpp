@@ -6,6 +6,8 @@
 #include "ll/api/service/PlayerInfo.h"
 #include "sqlitecpp/SQLiteCpp.h"
 #include <memory>
+#include <optional>
+#include <string>
 #include <vector>
 
 
@@ -114,7 +116,6 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
             }
             fmoney -= val;
             {
-
                 set.bindNoCopy(2, from);
                 set.bind(1, fmoney);
                 set.exec();
@@ -122,24 +123,22 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
                 set.clearBindings();
             }
         }
-        if (!to.empty()) {
-            auto tmoney = LLMoney_Get(to);
-            if (from.empty()) {
-                tmoney += val;
-            } else {
-                tmoney += val - val * legacy_money::getConfig().pay_tax;
-            }
-            if (tmoney < 0) {
-                db->exec("rollback");
-                return false;
-            }
-            {
-                set.bindNoCopy(2, to);
-                set.bind(1, tmoney);
-                set.exec();
-                set.reset();
-                set.clearBindings();
-            }
+        auto tmoney = LLMoney_Get(to);
+        if (from.empty()) {
+            tmoney += val;
+        } else {
+            tmoney += val - val * legacy_money::getConfig().pay_tax;
+        }
+        if (tmoney < 0) {
+            db->exec("rollback");
+            return false;
+        }
+        {
+            set.bindNoCopy(2, to);
+            set.bind(1, tmoney);
+            set.exec();
+            set.reset();
+            set.clearBindings();
         }
 
         {
@@ -222,8 +221,11 @@ std::vector<std::pair<std::string, long long>> LLMoney_Ranking(unsigned short nu
         std::vector<std::pair<std::string, long long>> mapTemp;
         get.bind(1, num);
         while (get.executeStep()) {
-            std::string xuid    = get.getColumn(0).getString();
-            long long   balance = get.getColumn(1).getInt64();
+            std::string xuid = get.getColumn(0).getString();
+            if (xuid.empty()) {
+                continue;
+            }
+            long long balance = get.getColumn(1).getInt64();
             // std::cout << xuid << " " << balance << "\n";
             mapTemp.push_back(std::pair<std::string, long long>(xuid, balance));
         }
@@ -251,18 +253,19 @@ std::string LLMoney_GetHist(std::string xuid, int timediff) {
         get.bindNoCopy(2, xuid);
         get.bindNoCopy(3, xuid);
         while (get.executeStep()) {
-            std::string              from, to;
-            ll::service::PlayerInfo& info   = ll::service::PlayerInfo::getInstance();
-            auto                     fromPl = info.fromXuid(get.getColumn(0).getString());
-            auto                     toPl   = info.fromXuid(get.getColumn(1).getString());
-            if (fromPl) from = fromPl->name;
-            if (toPl) to = toPl->name;
-            if (from.empty()) {
-                from = "System";
-            } else if (to.empty()) {
-                to = "System";
+            std::string              fromXuid = get.getColumn(0).getString();
+            std::string              toXuid   = get.getColumn(1).getString();
+            std::string              fromName, toName = "System";
+            ll::service::PlayerInfo& info      = ll::service::PlayerInfo::getInstance();
+            auto                     fromEntry = fromXuid.empty() ? std::nullopt : info.fromXuid(fromXuid);
+            auto                     toEntry   = toXuid.empty() ? std::nullopt : info.fromXuid(toXuid);
+            if (fromEntry) {
+                fromName = fromEntry->name;
             }
-            rv += from + " -> " + to + " " + std::to_string((long long)get.getColumn(2).getInt64()) + " "
+            if (toEntry) {
+                toName = toEntry->name;
+            }
+            rv += fromName + " -> " + toName + " " + std::to_string((long long)get.getColumn(2).getInt64()) + " "
                 + get.getColumn(3).getText() + " (" + get.getColumn(4).getText() + ")\n";
         }
         get.reset();
