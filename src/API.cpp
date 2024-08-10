@@ -102,7 +102,7 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
             return false;
         }
     }
-    if (val < 0 || from == to || to.empty()) {
+    if (val < 0 || from == to) {
         return false;
     }
     try {
@@ -123,22 +123,24 @@ bool LLMoney_Trans(std::string from, std::string to, long long val, std::string 
                 set.clearBindings();
             }
         }
-        auto tmoney = LLMoney_Get(to);
-        if (from.empty()) {
-            tmoney += val;
-        } else {
-            tmoney += val - val * legacy_money::getConfig().pay_tax;
-        }
-        if (tmoney < 0) {
-            db->exec("rollback");
-            return false;
-        }
-        {
-            set.bindNoCopy(2, to);
-            set.bind(1, tmoney);
-            set.exec();
-            set.reset();
-            set.clearBindings();
+        if (!to.empty()) {
+            auto tmoney = LLMoney_Get(to);
+            if (from.empty()) {
+                tmoney += val;
+            } else {
+                tmoney += val - val * legacy_money::getConfig().pay_tax;
+            }
+            if (tmoney < 0) {
+                db->exec("rollback");
+                return false;
+            }
+            {
+                set.bindNoCopy(2, to);
+                set.bind(1, tmoney);
+                set.exec();
+                set.reset();
+                set.clearBindings();
+            }
         }
 
         {
