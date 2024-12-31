@@ -418,7 +418,7 @@ bool LegacyMoney::load() {
     if (!loadConfig() || !initDatabase()) {
         return false;
     }
-    auto res = ll::i18n::getInstance().load(getSelf().getLangDir())
+    auto res = ll::i18n::getInstance().load(getSelf().getLangDir());
     return true;
 }
 
