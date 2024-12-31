@@ -418,11 +418,7 @@ bool LegacyMoney::load() {
     if (!loadConfig() || !initDatabase()) {
         return false;
     }
-    if (auto res = ll::i18n::getInstance().load(getSelf().getLangDir()); !res) {
-        getSelf().getLogger().error("Failed to load language file");
-        ll::error_utils::printCurrentException(getSelf().getLogger());
-        return false;
-    }
+    auto res = ll::i18n::getInstance().load(getSelf().getLangDir())
     return true;
 }
 
