@@ -1,6 +1,6 @@
 {
-    "name": "${pluginName}",
-    "entry": "${pluginFile}",
+    "name": "${modName}",
+    "entry": "${modFile}",
     "type": "native",
     "description": "LLMoney, but adapted to LeviLamina",
     "author": "LiteLDev",
