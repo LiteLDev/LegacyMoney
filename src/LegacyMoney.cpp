@@ -435,6 +435,6 @@ bool LegacyMoney::enable() {
 
 bool LegacyMoney::disable() { return true; }
 
-LL_REGISTER_MOD(LegacyMoney, LegacyMoney::getInstance());
-
 } // namespace legacy_money
+
+LL_REGISTER_MOD(legacy_money::LegacyMoney, legacy_money::LegacyMoney::getInstance());
