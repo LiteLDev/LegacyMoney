@@ -2,8 +2,7 @@
 
 namespace legacy_money {
 struct MoneyConfig {
-    int         version         = 1;
-    std::string language        = "en";
+    int         version         = 2;
     int         def_money       = 0;
     float       pay_tax         = 0.0;
     bool        enable_commands = true;

@@ -2,7 +2,7 @@
 #include "Config.h"
 #include "LLMoney.h"
 #include "ll/api/Config.h"
-#include "ll/api/Logger.h"
+#include "ll/api/io/Logger.h"
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/command/CommandRegistrar.h"
 #include "ll/api/i18n/I18n.h"
@@ -10,7 +10,7 @@
 #include "ll/api/mod/RegisterHelper.h"
 #include "ll/api/service/PlayerInfo.h"
 #include "ll/api/utils/ErrorUtils.h"
-#include "mc/common/wrapper/optional_ref.h"
+#include "mc/deps/core/utility/optional_ref.h"
 #include "mc/server/commands/CommandOriginType.h"
 #include "mc/server/commands/CommandOutput.h"
 #include "mc/server/commands/CommandPermissionLevel.h"
@@ -375,8 +375,10 @@ void RegisterMoneyCommands() {
 
 namespace legacy_money {
 
-static std::unique_ptr<LegacyMoney> instance;
-LegacyMoney&                        LegacyMoney::getInstance() { return *instance; }
+LegacyMoney& LegacyMoney::getInstance() {
+    static LegacyMoney instance;
+    return instance;
+}
 MoneyConfig                         config;
 
 bool loadConfig() {
@@ -416,9 +418,11 @@ bool LegacyMoney::load() {
     if (!loadConfig() || !initDatabase()) {
         return false;
     }
-    ll::i18n::getInstance() = std::make_unique<ll::i18n::MultiFileI18N>(
-        ll::i18n::MultiFileI18N(getSelf().getLangDir(), legacy_money::getConfig().language)
-    );
+    if (auto res = ll::i18n::getInstance().load(getSelf().getLangDir()); !res) {
+        getSelf().getLogger().error("Failed to load language file");
+        ll::error_utils::printCurrentException(getSelf().getLogger());
+        return false;
+    }
     return true;
 }
 
@@ -431,6 +435,6 @@ bool LegacyMoney::enable() {
 
 bool LegacyMoney::disable() { return true; }
 
-LL_REGISTER_MOD(LegacyMoney, instance);
+LL_REGISTER_MOD(LegacyMoney, LegacyMoney::getInstance());
 
 } // namespace legacy_money

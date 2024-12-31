@@ -9,7 +9,7 @@ class LegacyMoney {
 public:
     static LegacyMoney& getInstance();
 
-    LegacyMoney(ll::mod::NativeMod& self) : mSelf(self) {}
+    LegacyMoney() : mSelf(*ll::mod::NativeMod::current()) {}
 
     [[nodiscard]] ll::mod::NativeMod& getSelf() const { return mSelf; }
 
