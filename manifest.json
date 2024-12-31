@@ -1,8 +1,8 @@
 {
     "name": "${modName}",
     "entry": "${modFile}",
+    "version": "${modVersion}",
     "type": "native",
     "description": "LLMoney, but adapted to LeviLamina",
-    "author": "LiteLDev",
-    "version": "0.9.0"
+    "author": "LiteLDev"
 }
