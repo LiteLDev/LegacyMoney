@@ -31,7 +31,6 @@ lip install github.com/LiteLDev/LegacyMoney
     "currency_symbol": "$",
     "def_money": 0, // Default money value
     "enable_commands": true,
-    "language": "en",
     "pay_tax": 0.0
 }
 ```

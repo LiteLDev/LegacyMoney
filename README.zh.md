@@ -31,7 +31,6 @@ lip install github.com/LiteLDev/LegacyMoney
     "currency_symbol": "$", // 货币符号
     "def_money": 0, // 玩家初始金额
     "enable_commands": true, // 启用money指令
-    "language": "en", // 语言，改为zh_CN启用中文
     "pay_tax": 0.0 // 转账税率
 }
 ```
