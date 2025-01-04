@@ -2,7 +2,6 @@
 #include "Event.h"
 #include "LLMoney.h"
 #include "LegacyMoney.h"
-#include "ll/api/io/Logger.h"
 #include "ll/api/service/PlayerInfo.h"
 #include "sqlitecpp/SQLiteCpp.h"
 #include <memory>
@@ -204,7 +203,7 @@ bool LLMoney_Set(std::string xuid, long long money) {
 
     isRealTrans = false;
     bool res    = LLMoney_Trans(from, to, diff, "set to " + std::to_string(money));
-    if (res) CallAfterEvent(LLMoneyEvent::Reduce, {}, xuid, money);
+    if (res) CallAfterEvent(LLMoneyEvent::Set, {}, xuid, money);
     return res;
 }
 
