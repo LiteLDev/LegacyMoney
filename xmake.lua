@@ -5,7 +5,7 @@ add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
 if is_config("target_type", "server") then
     add_requires("levilamina 1.0.0-rc.1", {configs = {target_type = "server"}})
 else
-    add_requires("levilamina 1.0.0-rc.1", {configs = {target_type = "client"}})
+    add_requires("levilamina 1.0.0-rc.2", {configs = {target_type = "client"}})
 end
 
 add_requires("levibuildscript")
