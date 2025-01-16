@@ -11,43 +11,65 @@ jobs:
 
       - uses: xmake-io/github-action-setup-xmake@v1
 
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/.xmake
+          key: xmake-${{ hashFiles('xmake.lua') }}
+          restore-keys: |
+            xmake-
+
       - run: |
           xmake repo -u
 
       - run: |
-          xmake f -a x64 -m release -p windows -v -y
+          xmake f -a x64 -m release -p windows -y
 
       - run: |
           xmake -w -y
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
           path: |
             bin/
 
-  upload-to-release:
-    needs:
-      - build
+  update-release-notes:
     permissions:
       contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v3
+      - id: extract-release-notes
+        uses: ffurrer2/extract-release-notes@v2
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          body: |
+            ${{ steps.extract-release-notes.outputs.release_notes }}
+
+  upload-to-release:
+    needs:
+      - build
+      - update-release-notes
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
-          path: release/
+          path: artifact
 
       - run: |
-          cp LICENSE README.md release/
+          cp CHANGELOG.md LICENSE README.md artifact/
 
-      - name: Archive release
-        run: |
-          cd release
+      - run: |
           zip -r ../${{ github.event.repository.name }}-windows-x64.zip *
-          cd ..
+        working-directory: artifact
 
       - name: Calculate SHA256
         id: calculate-sha256
