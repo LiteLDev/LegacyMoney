@@ -2,10 +2,10 @@
 #include "Config.h"
 #include "LLMoney.h"
 #include "ll/api/Config.h"
-#include "ll/api/io/Logger.h"
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/command/CommandRegistrar.h"
 #include "ll/api/i18n/I18n.h"
+#include "ll/api/io/Logger.h"
 #include "ll/api/mod/NativeMod.h"
 #include "ll/api/mod/RegisterHelper.h"
 #include "ll/api/service/PlayerInfo.h"
@@ -15,7 +15,10 @@
 #include "mc/server/commands/CommandOutput.h"
 #include "mc/server/commands/CommandPermissionLevel.h"
 #include "mc/server/commands/CommandSelector.h"
+#include "mc/server/commands/CommandSelectorBase.h"
+#include "mc/world/actor/ActorDefinitionIdentifier.h"
 #include "mc/world/actor/player/Player.h"
+#include "mc/world/actor/selectors/InvertableFilter.h"
 #include "mc/world/level/Level.h"
 #include <string>
 
@@ -379,7 +382,7 @@ LegacyMoney& LegacyMoney::getInstance() {
     static LegacyMoney instance;
     return instance;
 }
-MoneyConfig                         config;
+MoneyConfig config;
 
 bool loadConfig() {
     try {
