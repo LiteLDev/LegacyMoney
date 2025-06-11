@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.12.0] - 2025-06-11
+
+- Support LeviLamina 1.3.0
+
 ## [0.11.2] - 2025-05-31
 
 - Support LeviLamina 1.2.0
@@ -33,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Support LeviLamina 1.0.0-rc.3
 
+[0.12.0]: https://github.com/LiteLDev/LegacyMoney/compare/v0.11.2...v0.12.0
 [0.11.2]: https://github.com/LiteLDev/LegacyMoney/compare/v0.11.1...v0.11.2
 [0.11.1]: https://github.com/LiteLDev/LegacyMoney/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/LiteLDev/LegacyMoney/compare/v0.10.1...v0.11.0
