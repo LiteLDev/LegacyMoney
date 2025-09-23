@@ -296,7 +296,8 @@ void ConvertData() {
                 iss >> std::hex >> value;
                 unsigned long long xuid  = _byteswap_uint64(value);
                 long long          money = get.getColumn(1).getInt64();
-                set.bindNoCopy(1, std::to_string(xuid));
+                auto xuidStr = std::to_string(xuid);
+                set.bindNoCopy(1, xuidStr);
                 set.bind(2, money);
                 set.exec();
                 set.reset();
