@@ -9,7 +9,7 @@ else
 end
 
 add_requires("levibuildscript")
-add_requires("sqlitecpp 3.2.1")
+add_requires("sqlitecpp 3.3.3")
 
 if not has_config("vs_runtime") then
     set_runtimes("MD")
