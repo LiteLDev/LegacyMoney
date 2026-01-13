@@ -2,10 +2,10 @@
 #include "Config.h"
 #include "LLMoney.h"
 #include "ll/api/Config.h"
-#include "ll/api/io/Logger.h"
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/command/CommandRegistrar.h"
 #include "ll/api/i18n/I18n.h"
+#include "ll/api/io/Logger.h"
 #include "ll/api/mod/NativeMod.h"
 #include "ll/api/mod/RegisterHelper.h"
 #include "ll/api/service/PlayerInfo.h"
@@ -56,8 +56,10 @@ struct TopMoney {
 
 void RegisterMoneyCommands() {
     using ll::command::CommandRegistrar;
-    auto& command =
-        ll::command::CommandRegistrar::getInstance().getOrCreateCommand("money", "LegacyMoney's main command"_tr());
+    auto& command = ll::command::CommandRegistrar::getInstance(false).getOrCreateCommand(
+        "money",
+        "LegacyMoney's main command"_tr()
+    );
     command.overload<QueryMoney>()
         .text("query")
         .optional("playerName")
@@ -68,9 +70,10 @@ void RegisterMoneyCommands() {
                 } else {
                     Actor* actor = origin.getEntity();
                     if (actor) {
-                        output.success("Your balance: "_tr()
-                                           .append(legacy_money::getConfig().currency_symbol)
-                                           .append(std::to_string(LLMoney_Get(static_cast<Player*>(actor)->getXuid())))
+                        output.success(
+                            "Your balance: "_tr()
+                                .append(legacy_money::getConfig().currency_symbol)
+                                .append(std::to_string(LLMoney_Get(static_cast<Player*>(actor)->getXuid())))
                         );
                     } else {
                         output.error("Player not found"_tr());
@@ -379,7 +382,7 @@ LegacyMoney& LegacyMoney::getInstance() {
     static LegacyMoney instance;
     return instance;
 }
-MoneyConfig                         config;
+MoneyConfig config;
 
 bool loadConfig() {
     try {
@@ -400,7 +403,8 @@ bool loadConfig() {
             )) {
             return true;
         } else {
-            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration"_tr()
+            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error(
+                "Failed to rewrite configuration"_tr()
             );
         }
     } catch (...) {

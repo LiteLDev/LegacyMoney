@@ -3,6 +3,7 @@
     "entry": "${modFile}",
     "version": "${modVersion}",
     "type": "native",
+    "platform": "${modPlatform}",
     "description": "LLMoney, but adapted to LeviLamina",
     "author": "LiteLDev"
 }

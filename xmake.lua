@@ -1,11 +1,11 @@
 add_rules("mode.debug", "mode.release")
 
-add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
+add_repositories("levimc-repo " .. (get_config("levimc_repo") or "https://github.com/LiteLDev/xmake-repo.git"))
 
 if is_config("target_type", "server") then
-    add_requires("levilamina 1.7.0", {configs = {target_type = "server"}})
+    add_requires("levilamina 1.8.0-rc.1", {configs = {target_type = "server"}})
 else
-    add_requires("levilamina 1.7.0", {configs = {target_type = "client"}})
+    add_requires("levilamina 1.8.0-rc.1", {configs = {target_type = "client"}})
 end
 
 add_requires("levibuildscript")
@@ -14,6 +14,12 @@ add_requires("sqlitecpp 3.3.3")
 if not has_config("vs_runtime") then
     set_runtimes("MD")
 end
+
+option("levimc_repo")
+    set_default("https://github.com/LiteLDev/xmake-repo.git")
+    set_showmenu(true)
+    set_description("Set the levimc-repo path or url")
+option_end()
 
 option("target_type")
     set_default("server")
@@ -33,13 +39,11 @@ target("LegacyMoney")
     set_symbols("debug")
     add_files("src/**.cpp")
     add_includedirs("src")
-    -- if is_config("target_type", "server") then
-    --     add_includedirs("src-server")
-    --     add_files("src-server/**.cpp")
-    -- else
-    --     add_includedirs("src-client")
-    --     add_files("src-client/**.cpp")
-    -- end
+    if is_config("target_type", "server") then
+        add_defines("LL_PLAT_S")
+    else
+        add_defines("LL_PLAT_C")
+    end
     after_build(function (target)
         local bindir = path.join(os.projectdir(), "bin")
         local includedir = path.join(bindir, "include")
@@ -49,4 +53,4 @@ target("LegacyMoney")
         os.cp(path.join(os.projectdir(), "src", "LLMoney.h"), includedir)
         os.cp(path.join(target:targetdir(), target:name() .. ".lib"), libdir)
         os.cp(path.join(os.projectdir(), "assets", "lang"), path.join(path.join(bindir, target:name()), "lang"))
-        end)
+    end)
