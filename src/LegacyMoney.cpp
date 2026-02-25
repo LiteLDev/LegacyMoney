@@ -4,6 +4,8 @@
 #include "ll/api/Config.h"
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/command/CommandRegistrar.h"
+#include "ll/api/event/EventBus.h"
+#include "ll/api/event/server/ServerStartedEvent.h"
 #include "ll/api/i18n/I18n.h"
 #include "ll/api/io/Logger.h"
 #include "ll/api/mod/NativeMod.h"
@@ -16,10 +18,13 @@
 #include "mc/server/commands/CommandPermissionLevel.h"
 #include "mc/server/commands/CommandSelector.h"
 #include "mc/world/actor/player/Player.h"
-#include "mc/world/level/Level.h"
+
 #include <string>
 
+namespace legacy_money {
+
 using namespace ll::i18n_literals;
+
 
 struct QueryMoney {
     std::string playerName;
@@ -72,7 +77,7 @@ void RegisterMoneyCommands() {
                     if (actor) {
                         output.success(
                             "Your balance: "_tr()
-                                .append(legacy_money::getConfig().currency_symbol)
+                                .append(getConfig().currency_symbol)
                                 .append(std::to_string(LLMoney_Get(static_cast<Player*>(actor)->getXuid())))
                         );
                     } else {
@@ -86,7 +91,7 @@ void RegisterMoneyCommands() {
                         output.success(
                             param.playerName
                             + "'s balance: "_tr()
-                                  .append(legacy_money::getConfig().currency_symbol)
+                                  .append(getConfig().currency_symbol)
                                   .append(std::to_string(LLMoney_Get(info->xuid)))
                         );
 
@@ -108,7 +113,7 @@ void RegisterMoneyCommands() {
                             output.success(
                                 player->getRealName()
                                 + "'s balance: "_tr()
-                                      .append(legacy_money::getConfig().currency_symbol)
+                                      .append(getConfig().currency_symbol)
                                       .append(std::to_string(LLMoney_Get(player->getXuid())))
                             );
                         }
@@ -133,8 +138,8 @@ void RegisterMoneyCommands() {
                     if (info.has_value()) {
                         if (LLMoney_Add(info->xuid, param.amount)) {
                             output.success(
-                                "Added "_tr() + legacy_money::getConfig().currency_symbol + std::to_string(param.amount)
-                                + " to "_tr() + param.playerName
+                                "Added "_tr() + getConfig().currency_symbol + std::to_string(param.amount) + " to "_tr()
+                                + param.playerName
                             );
                         } else {
                             output.error("Failed to add money"_tr());
@@ -153,8 +158,8 @@ void RegisterMoneyCommands() {
                     if (info.has_value()) {
                         if (LLMoney_Reduce(info->xuid, param.amount)) {
                             output.success(
-                                "Reduced "_tr() + legacy_money::getConfig().currency_symbol
-                                + std::to_string(param.amount) + " to "_tr() + param.playerName
+                                "Reduced "_tr() + getConfig().currency_symbol + std::to_string(param.amount)
+                                + " to "_tr() + param.playerName
                             );
                         } else {
                             output.error("Failed to reduce money"_tr());
@@ -173,8 +178,8 @@ void RegisterMoneyCommands() {
                     if (info.has_value()) {
                         if (LLMoney_Set(info->xuid, param.amount)) {
                             output.success(
-                                "Set "_tr() + param.playerName + "'s money to "_tr()
-                                + legacy_money::getConfig().currency_symbol + std::to_string(param.amount)
+                                "Set "_tr() + param.playerName + "'s money to "_tr() + getConfig().currency_symbol
+                                + std::to_string(param.amount)
                             );
                         } else {
                             output.error("Failed to set money"_tr());
@@ -223,8 +228,8 @@ void RegisterMoneyCommands() {
                             for (Player* player : *it) {
                                 if (LLMoney_Add(player->getXuid(), param.amount)) {
                                     output.success(
-                                        "Added "_tr() + legacy_money::getConfig().currency_symbol
-                                        + std::to_string(param.amount) + " to "_tr() + player->getRealName()
+                                        "Added "_tr() + getConfig().currency_symbol + std::to_string(param.amount)
+                                        + " to "_tr() + player->getRealName()
                                     );
                                 } else {
                                     output.error("Failed to reduce money"_tr());
@@ -245,8 +250,8 @@ void RegisterMoneyCommands() {
                             for (Player* player : *it) {
                                 if (LLMoney_Reduce(player->getXuid(), param.amount)) {
                                     output.success(
-                                        "Reduced "_tr() + legacy_money::getConfig().currency_symbol
-                                        + std::to_string(param.amount) + " to "_tr() + player->getRealName()
+                                        "Reduced "_tr() + getConfig().currency_symbol + std::to_string(param.amount)
+                                        + " to "_tr() + player->getRealName()
                                     );
                                 } else {
                                     output.error("Failed to reduce money"_tr());
@@ -267,8 +272,8 @@ void RegisterMoneyCommands() {
                             for (Player* player : *it) {
                                 if (LLMoney_Set(player->getXuid(), param.amount)) {
                                     output.success(
-                                        "Set "_tr() + legacy_money::getConfig().currency_symbol
-                                        + std::to_string(param.amount) + " to "_tr() + player->getRealName()
+                                        "Set "_tr() + getConfig().currency_symbol + std::to_string(param.amount)
+                                        + " to "_tr() + player->getRealName()
                                     );
                                 } else {
                                     output.error("Failed to set money"_tr());
@@ -359,7 +364,7 @@ void RegisterMoneyCommands() {
                 for (auto i : rank) {
                     auto info = ll::service::PlayerInfo::getInstance().fromXuid(i.first);
                     if (info.has_value()) {
-                        output.success("{} {}{}", info->name, legacy_money::getConfig().currency_symbol, i.second);
+                        output.success("{} {}{}", info->name, getConfig().currency_symbol, i.second);
                     }
                 }
             } else {
@@ -368,15 +373,13 @@ void RegisterMoneyCommands() {
                 for (auto i : rank) {
                     auto info = ll::service::PlayerInfo::getInstance().fromXuid(i.first);
                     if (info.has_value()) {
-                        output.success("{} {}{}", info->name, legacy_money::getConfig().currency_symbol, i.second);
+                        output.success("{} {}{}", info->name, getConfig().currency_symbol, i.second);
                     }
                 }
             }
         }
     );
 }
-
-namespace legacy_money {
 
 LegacyMoney& LegacyMoney::getInstance() {
     static LegacyMoney instance;
@@ -386,30 +389,22 @@ MoneyConfig config;
 
 bool loadConfig() {
     try {
-        if (ll::config::loadConfig(
-                config,
-                legacy_money::LegacyMoney::getInstance().getSelf().getModDir() / "money.json"
-            )) {
+        if (ll::config::loadConfig(config, LegacyMoney::getInstance().getSelf().getModDir() / "money.json")) {
             return true;
         }
     } catch (...) {
-        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to load configuration"_tr());
-        ll::error_utils::printCurrentException(legacy_money::LegacyMoney::getInstance().getSelf().getLogger());
+        LegacyMoney::getInstance().getSelf().getLogger().error("Failed to load configuration"_tr());
+        ll::error_utils::printCurrentException(LegacyMoney::getInstance().getSelf().getLogger());
     }
     try {
-        if (ll::config::saveConfig(
-                config,
-                legacy_money::LegacyMoney::getInstance().getSelf().getModDir() / "money.json"
-            )) {
+        if (ll::config::saveConfig(config, LegacyMoney::getInstance().getSelf().getModDir() / "money.json")) {
             return true;
         } else {
-            legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error(
-                "Failed to rewrite configuration"_tr()
-            );
+            LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration"_tr());
         }
     } catch (...) {
-        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration"_tr());
-        ll::error_utils::printCurrentException(legacy_money::LegacyMoney::getInstance().getSelf().getLogger());
+        LegacyMoney::getInstance().getSelf().getLogger().error("Failed to rewrite configuration"_tr());
+        ll::error_utils::printCurrentException(LegacyMoney::getInstance().getSelf().getLogger());
     }
     return false;
 }
@@ -423,15 +418,17 @@ bool LegacyMoney::load() {
         return false;
     }
     auto res = ll::i18n::getInstance().load(getSelf().getLangDir());
+    using namespace ll::event;
+    EventBus::getInstance().emplaceListener<ServerStartedEvent>([](ServerStartedEvent& ev) {
+        if (getConfig().enable_commands) {
+            RegisterMoneyCommands();
+        }
+        return true;
+    });
     return true;
 }
 
-bool LegacyMoney::enable() {
-    if (legacy_money::getConfig().enable_commands) {
-        RegisterMoneyCommands();
-    }
-    return true;
-}
+bool LegacyMoney::enable() { return true; }
 
 bool LegacyMoney::disable() { return true; }
 

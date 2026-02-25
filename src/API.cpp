@@ -53,7 +53,7 @@ bool initDatabase() {
 			Time COLLATE BINARY COLLATE BINARY DESC \
 		); ");
     } catch (std::exception const& e) {
-        legacy_money::LegacyMoney::getInstance().getSelf().getLogger().error("Database error: {}", e.what());
+        LegacyMoney::getInstance().getSelf().getLogger().error("Database error: {}", e.what());
         return false;
     }
     ConvertData();
