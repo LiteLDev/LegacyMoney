@@ -5,7 +5,7 @@
 #include "ll/api/command/CommandHandle.h"
 #include "ll/api/command/CommandRegistrar.h"
 #include "ll/api/event/EventBus.h"
-#include "ll/api/event/server/ServerStartedEvent.h"
+#include "ll/api/event/command/ServerCommandRegisterEvent.h"
 #include "ll/api/i18n/I18n.h"
 #include "ll/api/io/Logger.h"
 #include "ll/api/mod/NativeMod.h"
@@ -73,8 +73,7 @@ void RegisterMoneyCommands() {
                 if (origin.getOriginType() != CommandOriginType::Player) {
                     output.error("Please type the name of player you want to query"_tr());
                 } else {
-                    Actor* actor = origin.getEntity();
-                    if (actor) {
+                    if (Actor* actor = origin.getEntity()) {
                         output.success(
                             "Your balance: "_tr()
                                 .append(getConfig().currency_symbol)
@@ -196,8 +195,7 @@ void RegisterMoneyCommands() {
                 if (origin.getOriginType() == CommandOriginType::Player) {
                     auto info = ll::service::PlayerInfo::getInstance().fromName(param.playerName);
                     if (info.has_value()) {
-                        Actor* fromActor = origin.getEntity();
-                        if (fromActor) {
+                        if (Actor* fromActor = origin.getEntity()) {
                             LLMoney_Trans(static_cast<Player*>(fromActor)->getXuid(), info->xuid, param.amount);
                         } else {
                             output.error("Origin not found!"_tr());
@@ -315,8 +313,7 @@ void RegisterMoneyCommands() {
     command.overload<MoneyOthers>().text("hist").optional("time").execute(
         [&](CommandOrigin const& origin, CommandOutput& output, MoneyOthers const& param, Command const&) {
             if (origin.getOriginType() == CommandOriginType::Player) {
-                Actor* actor = origin.getEntity();
-                if (actor) {
+                if (Actor* actor = origin.getEntity()) {
                     if (param.time) {
                         output.success(LLMoney_GetHist(static_cast<Player*>(actor)->getXuid(), param.time));
                     } else {
@@ -419,7 +416,7 @@ bool LegacyMoney::load() {
     }
     auto res = ll::i18n::getInstance().load(getSelf().getLangDir());
     using namespace ll::event;
-    EventBus::getInstance().emplaceListener<ServerStartedEvent>([](ServerStartedEvent& ev) {
+    EventBus::getInstance().emplaceListener<ServerCommandRegisterEvent>([](ServerCommandRegisterEvent&) {
         if (getConfig().enable_commands) {
             RegisterMoneyCommands();
         }
