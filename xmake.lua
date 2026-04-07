@@ -3,9 +3,9 @@ add_rules("mode.debug", "mode.release")
 add_repositories("levimc-repo " .. (get_config("levimc_repo") or "https://github.com/LiteLDev/xmake-repo.git"))
 
 if is_config("target_type", "server") then
-    add_requires("levilamina 1.9.5", {configs = {target_type = "server"}})
+    add_requires("levilamina 26.10.*", {configs = {target_type = "server"}})
 else
-    add_requires("levilamina 1.9.5", {configs = {target_type = "client"}})
+    add_requires("levilamina 26.10.*", {configs = {target_type = "client"}})
 end
 
 add_requires("levibuildscript")
@@ -39,11 +39,7 @@ target("LegacyMoney")
     set_symbols("debug")
     add_files("src/**.cpp")
     add_includedirs("src")
-    if is_config("target_type", "server") then
-        add_defines("LL_PLAT_S")
-    else
-        add_defines("LL_PLAT_C")
-    end
+    add_headerfiles("src/LLMoney.h")
     after_build(function (target)
         local bindir = path.join(os.projectdir(), "bin")
         local includedir = path.join(bindir, "include")
