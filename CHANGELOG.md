@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-09-08
+
+### Changed
+
+- Adapted to LeviLamina 26.40.*
+
 ## [0.20.0] - 2026-09-06
 
 ### Changed
@@ -93,7 +99,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Support LeviLamina 1.0.0-rc.3
 
-[Unreleased]: https://github.com/LiteLDev/LegacyMoney/compare/v0.20.0...HEAD
+[Unreleased]: https://github.com/LiteLDev/LegacyMoney/compare/v0.21.0...HEAD
+[0.21.0]: https://github.com/LiteLDev/LegacyMoney/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/LiteLDev/LegacyMoney/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/LiteLDev/LegacyMoney/compare/v0.18.1...v0.19.0
 [0.18.1]: https://github.com/LiteLDev/LegacyMoney/compare/v0.18.0...v0.18.1
