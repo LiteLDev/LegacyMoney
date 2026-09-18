@@ -2,11 +2,7 @@ add_rules("mode.debug", "mode.release")
 
 add_repositories("levimc-repo " .. (get_config("levimc_repo") or "https://github.com/LiteLDev/xmake-repo.git"))
 
-if is_config("target_type", "server") then
-    add_requires("levilamina 26.40.*", {configs = {target_type = "server"}})
-else
-    add_requires("levilamina 26.40.*", {configs = {target_type = "client"}})
-end
+add_requires("levilamina 26.51.*", {configs = {target_type = get_config("target_type")}})
 
 add_requires("levibuildscript")
 add_requires("sqlitecpp 3.3.3")
