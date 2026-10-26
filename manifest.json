@@ -5,5 +5,5 @@
     "type": "native",
     "platform": "${modPlatform}",
     "description": "LLMoney, but adapted to LeviLamina",
-    "author": "LiteLDev"
+    "author": "LeviMC"
 }
