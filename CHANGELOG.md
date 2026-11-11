@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Migrated the lip package from tooth.json to lip.toml (format 4)
+- Removed the variant `client`: the default variant holds the client build, so install and depend on `github.com/LiteLDev/LegacyMoney` on both sides
 
 ## [0.23.0] - 2026-11-03
 
