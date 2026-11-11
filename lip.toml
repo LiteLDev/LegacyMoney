@@ -7,10 +7,10 @@ name = "LegacyMoney"
 description = "LLMoney, but adapted to LeviLamina"
 tags = ["library", "economy"]
 
-# The default variant holds both builds: the server build for servers (LeviLamina) and the client
-# build for clients (LeviLamina#client). The variant "client" is the client build alone, under the
-# name earlier releases used for it, so LeviLauncher, existing installs and dependents that ask for
-# github.com/LiteLDev/LegacyMoney#client keep working.
+# The default variant holds both builds: the server build for the server side and the client build
+# for the client side. There is no "client" variant. The client entry depends on
+# github.com/LiteLDev/LeviLamina#client because all LeviLamina releases in range are tooth.json;
+# switch it to the bare id once only lip.toml releases of LeviLamina are targeted.
 
 [[variants.""]]
 side = "server"
@@ -32,18 +32,6 @@ platform = "win-x64"
 "github.com/LiteLDev/LeviLamina#client" = "26.60.*"
 
 [[variants."".assets]]
-type = "zip"
-urls = ["https://{{id}}/releases/download/v{{version}}/LegacyMoney-client-windows-x64.zip"]
-place = [{ src = "LegacyMoney/", dest = "mods/LegacyMoney/" }]
-
-[[variants.client]]
-side = "client"
-platform = "win-x64"
-
-[variants.client.deps]
-"github.com/LiteLDev/LeviLamina#client" = "26.60.*"
-
-[[variants.client.assets]]
 type = "zip"
 urls = ["https://{{id}}/releases/download/v{{version}}/LegacyMoney-client-windows-x64.zip"]
 place = [{ src = "LegacyMoney/", dest = "mods/LegacyMoney/" }]
