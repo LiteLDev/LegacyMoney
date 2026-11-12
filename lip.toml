@@ -8,9 +8,10 @@ description = "LLMoney, but adapted to LeviLamina"
 tags = ["library", "economy"]
 
 # The default variant holds both builds: the server build for the server side and the client build
-# for the client side. There is no "client" variant. The client entry depends on
-# github.com/LiteLDev/LeviLamina#client because all LeviLamina releases in range are tooth.json;
-# switch it to the bare id once only lip.toml releases of LeviLamina are targeted.
+# for the client side. There is no "client" variant. The client entry depends on the bare
+# LeviLamina: a lip.toml dependency is never rewritten to "#client", and lip.toml releases of
+# LeviLamina have no "client" variant. Its range starts above 26.60.6, the last tooth.json release
+# of LeviLamina, because the "" variant of a tooth.json release is the server build.
 
 [[variants.""]]
 side = "server"
@@ -29,7 +30,7 @@ side = "client"
 platform = "win-x64"
 
 [variants."".deps]
-"github.com/LiteLDev/LeviLamina#client" = "26.60.*"
+"github.com/LiteLDev/LeviLamina" = ">26.60.6 <26.61.0"
 
 [[variants."".assets]]
 type = "zip"
